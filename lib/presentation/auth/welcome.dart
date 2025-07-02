@@ -14,40 +14,57 @@ class WelcomePage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Gambar Welcome
+              // Ilustrasi keluarga (ganti dengan asset baru)
               Image.asset(
-                'assets/images/family.png',
-                height: 200,
+                'assets/images/familyfix.png', // <- Asset baru
+                height: 220,
               ),
               const SizedBox(height: 32),
 
-              // Judul atau teks selamat datang (opsional)
-              Text(
-                'Selamat Datang di HematYu!',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textColor,
-                ),
-                textAlign: TextAlign.center,
+              // Judul + Subjudul
+              Column(
+                children: [
+                  Text(
+                    'Kelola Keuangan Keluarga',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textColor,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Catat pemasukan/pengeluaran dengan mudah',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textColor.withOpacity(0.7),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
               const SizedBox(height: 40),
 
-              // Tombol Mulai
+              // Tombol Mulai (dengan gradient)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/login'); // pastikan route ada
+                    Navigator.pushNamed(context, '/login');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryColor,
-                    foregroundColor: AppColors.lightTextColor,
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 3,
+                    shadowColor: AppColors.primaryColor.withOpacity(0.3),
                   ),
                   child: const Text(
-                    'Mulai',
-                    style: TextStyle(fontSize: 16),
+                    'Mulai Sekarang',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),

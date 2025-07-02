@@ -16,7 +16,7 @@ class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
 
   List<Widget> get _pages => [
-        const DashboardPage(),
+        DashboardPage(),
         KategoriPage(onBackToDashboard: () {
           setState(() {
             _currentIndex = 0;

@@ -11,35 +11,52 @@ class AuthRepository {
 
   AuthRepository(this.httpClient);
 
-  /// Login
+  /// 🔐 Login
   Future<LoginResponseModel> login(LoginRequestModel request) async {
     final response = await httpClient.post('/auth/login', request.toMap());
-
     try {
       final decoded = json.decode(response.body);
+
+      print('📥 Response Body: ${response.body}');
+      print('📥 Status Code: ${response.statusCode}');
+
       if (response.statusCode == 200) {
+        final token = decoded['data']['token'];
+        if (token != null) {
+          print("✅ Token dari server: $token");
+
+          // 🔐 Simpan token ke storage
+          await httpClient.storage.saveToken(token);
+          final savedToken = await httpClient.storage.getToken();
+          print("🔐 Token tersimpan di storage: $savedToken");
+        } else {
+          print("⚠️ Token tidak ditemukan di response");
+          throw Exception("Token tidak ditemukan dalam response");
+        }
+
         return LoginResponseModel.fromMap(decoded);
       } else {
         throw Exception(decoded['message'] ?? 'Login gagal');
       }
     } catch (e) {
+      print("❌ Login gagal: $e");
       throw Exception('Login response tidak valid: $e');
     }
   }
 
-  /// Register
+  /// 📝 Register
   Future<RegisterResponseModel> register(RegisterRequestModel request) async {
     final response = await httpClient.post('/auth/register', request.toMap());
 
-    print('Status Code: ${response.statusCode}');
-    print('Response Body: ${response.body}');
+    print('📥 Register Response Status Code: ${response.statusCode}');
+    print('📥 Register Response Body: ${response.body}');
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       try {
         final jsonResponse = json.decode(response.body);
         return RegisterResponseModel.fromMap(jsonResponse);
       } catch (e) {
-        print('Register parsing error: $e');
+        print('❌ Register parsing error: $e');
         throw Exception('Gagal parsing response');
       }
     } else {
@@ -47,9 +64,13 @@ class AuthRepository {
     }
   }
 
-  /// Get Profil User
+  /// 👤 Get Profil User (me)
   Future<MeResponseModel> getMe() async {
     final response = await httpClient.get('/auth/me', authorized: true);
+
+    print("📡 Memuat profil user...");
+    print("📥 Status code: ${response.statusCode}");
+    print("📥 Body: ${response.body}");
 
     try {
       final decoded = json.decode(response.body);
@@ -59,15 +80,17 @@ class AuthRepository {
         throw Exception(decoded['message'] ?? 'Gagal mengambil profil');
       }
     } catch (e) {
+      print('❌ Error parsing getMe: $e');
       throw Exception('Response getMe tidak valid: $e');
     }
   }
 
-  /// Logout
+  /// 🔓 Logout
   Future<void> logout() async {
     await httpClient.clearToken();
+    print("🚪 Token dihapus, logout berhasil");
   }
 
-  // Optional access to storage
+  /// Optional: akses storage dari luar jika dibutuhkan
   get storageService => httpClient.storage;
 }

@@ -1,4 +1,3 @@
-// lib/service/service_http_client.dart
 import 'dart:convert';
 import 'package:hematyu_app_dummy_fix/service/secure_storage_service.dart';
 import 'package:http/http.dart' as http;
@@ -10,6 +9,7 @@ class ServiceHttpClient {
   final String baseUrl = 'http://10.0.2.2:8000/api';
 
   SecureStorageService get storage => _storage;
+
   Future<Map<String, String>> _getHeaders({bool authorized = false}) async {
     final headers = {
       'Content-Type': 'application/json',
@@ -17,12 +17,14 @@ class ServiceHttpClient {
     };
 
     if (authorized) {
-      final token = await _storage.getToken(); // 🔥 Pakai getToken()
+      final token = await _storage.getToken();
+      print('🔐 Token: $token');
       if (token != null) {
         headers['Authorization'] = 'Bearer $token';
       }
     }
 
+    print('📡 Headers: $headers');
     return headers;
   }
 
@@ -31,21 +33,38 @@ class ServiceHttpClient {
     dynamic body, {
     bool authorized = false,
   }) async {
-    return await _client.post(
-      Uri.parse('$baseUrl$path'),
-      headers: await _getHeaders(authorized: authorized),
+    final url = Uri.parse('$baseUrl$path');
+    final headers = await _getHeaders(authorized: authorized);
+
+    print('📤 POST Request to: $url');
+    print('📤 Body: ${jsonEncode(body)}');
+
+    final response = await _client.post(
+      url,
+      headers: headers,
       body: jsonEncode(body),
     );
+
+    print('✅ Response Status: ${response.statusCode}');
+    print('✅ Response Body: ${response.body}');
+    return response;
   }
 
   Future<http.Response> get(String path, {bool authorized = false}) async {
-    return await _client.get(
-      Uri.parse('$baseUrl$path'),
-      headers: await _getHeaders(authorized: authorized),
+    final url = Uri.parse('$baseUrl$path');
+    final headers = await _getHeaders(authorized: authorized);
+
+    print('📤 GET Request to: $url');
+
+    final response = await _client.get(
+      url,
+      headers: headers,
     );
+
+    print('✅ Response Status: ${response.statusCode}');
+    print('✅ Response Body: ${response.body}');
+    return response;
   }
 
   Future<void> clearToken() async => await _storage.clearToken();
-
-  // FlutterSecureStorage get storage => _storage;
 }

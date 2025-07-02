@@ -1,35 +1,19 @@
-part of 'dashboard_bloc.dart';
+import 'package:hematyu_app_dummy_fix/data/model/response/dashboard/dashboard_user_model.dart';
 
-
-abstract class DashboardState extends Equatable {
-  const DashboardState();
-
-  @override
-  List<Object> get props => [];
-}
+abstract class DashboardState {}
 
 class DashboardInitial extends DashboardState {}
 
 class DashboardLoading extends DashboardState {}
 
 class DashboardLoaded extends DashboardState {
-  final MeResponseModel profile;
-  final TotalPemasukanResponse pemasukan;
+  final DashboardUserResponse userResponse;
 
-  const DashboardLoaded({
-    required this.profile,
-    required this.pemasukan,
-  });
-
-  @override
-  List<Object> get props => [profile, pemasukan];
+  DashboardLoaded(this.userResponse);
 }
 
 class DashboardError extends DashboardState {
   final String message;
 
-  const DashboardError({required this.message});
-
-  @override
-  List<Object> get props => [message];
+  DashboardError(this.message);
 }
