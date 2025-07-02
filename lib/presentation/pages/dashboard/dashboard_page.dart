@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hematyu_app_dummy_fix/core/constants/colors.dart';
-import 'package:hematyu_app_dummy_fix/presentation/bloc_chart/bloc/dashboard_chart_bloc.dart';
+import 'package:hematyu_app_dummy_fix/presentation/chart/bloc/dashboard_chart_bloc.dart';
 import 'package:hematyu_app_dummy_fix/presentation/dashboard/bloc/dashboard_bloc.dart';
 import 'package:hematyu_app_dummy_fix/presentation/dashboard/bloc/dashboard_event.dart';
 import 'package:hematyu_app_dummy_fix/presentation/dashboard/bloc/dashboard_state.dart';
@@ -194,13 +194,8 @@ class DashboardPage extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 12),
                                 LinearProgressIndicator(
-                                  // PERBAIKAN: Jika backend sudah mengembalikan nilai persentase (misal 0.6 untuk 0.6%),
-                                  // maka jangan dikalikan 100 lagi untuk progress indicator.
-                                  // ProgressIndicator butuh nilai antara 0.0 - 1.0.
-                                  // Jadi, jika 0.6% = 0.6, maka nilai yang dibutuhkan untuk progress adalah 0.6 / 100 = 0.006.
-                                  // Jika backend mengembalikan 0.6 dan Anda ingin 0.6% tampil di UI, maka untuk progress indicator
-                                  // Anda harus membagi dengan 100 (0.6 / 100).
-                                  value: percentage / 100, // Misal: 0.6 / 100 = 0.006
+                                  
+                                  value: percentage / 100, 
                                   minHeight: 12,
                                   backgroundColor: Colors.grey[300],
                                   valueColor: AlwaysStoppedAnimation<Color>(
@@ -215,8 +210,7 @@ class DashboardPage extends StatelessWidget {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      // PERBAIKAN: Hapus perkalian * 100 jika backend sudah memberikan nilai persentase
-                                      // dan Anda ingin menampilkannya sebagai 0.6% bukan 60%.
+                                      
                                       "${percentage.toStringAsFixed(1)}%",
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
@@ -257,7 +251,7 @@ class DashboardPage extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              /// Chart Section (Tetap seperti semula)
+              /// Chart Section 
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(
