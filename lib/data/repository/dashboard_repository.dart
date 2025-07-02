@@ -3,6 +3,7 @@ import 'package:hematyu_app_dummy_fix/data/model/response/dashboard/dashboard_us
 import 'package:hematyu_app_dummy_fix/service/service_http_client.dart';
 import 'package:hematyu_app_dummy_fix/data/model/response/dashboard/dashboard_chart_model.dart';
 import 'package:hematyu_app_dummy_fix/data/model/response/dashboard/pengeluaran_kategori_chart_model.dart';
+import 'package:hematyu_app_dummy_fix/data/model/response/target/target_summary_model.dart';
 
 class DashboardRepository {
   final ServiceHttpClient _httpClient;
@@ -82,6 +83,16 @@ class DashboardRepository {
           .toList();
     } else {
       throw Exception('Gagal mengambil chart data dengan range $range');
+    }
+  }
+
+  Future<TargetSummaryModel> getTargetSummary() async {
+    final response = await _httpClient.get('/target/summary', authorized: true);
+    if (response.statusCode == 200) {
+      final jsonBody = jsonDecode(response.body);
+      return TargetSummaryModel.fromJson(jsonBody);
+    } else {
+      throw Exception('Gagal mengambil ringkasan target');
     }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hematyu_app_dummy_fix/core/constants/colors.dart';
 import 'package:hematyu_app_dummy_fix/presentation/bloc_chart/bloc/dashboard_chart_bloc.dart';
 import 'package:hematyu_app_dummy_fix/presentation/dashboard/bloc/dashboard_bloc.dart';
 import 'package:hematyu_app_dummy_fix/presentation/dashboard/bloc/dashboard_event.dart';
@@ -10,7 +11,11 @@ import 'package:hematyu_app_dummy_fix/presentation/pages/dashboard/dashboard_cha
 import 'package:intl/intl.dart';
 
 class DashboardPage extends StatelessWidget {
-  final formatter = NumberFormat.currency(locale: 'id', symbol: 'Rp', decimalDigits: 0);
+  final formatter = NumberFormat.currency(
+    locale: 'id',
+    symbol: 'Rp',
+    decimalDigits: 0,
+  );
 
   DashboardPage({super.key});
 
@@ -21,73 +26,348 @@ class DashboardPage extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) => DashboardBloc(dashboardRepository)..add(FetchDashboardEvent()),
-        ),
-        BlocProvider(
           create: (_) {
             final now = DateTime.now();
             return DashboardChartBloc(dashboardRepository)
               ..add(FetchDashboardCharts(month: now.month, year: now.year));
           },
         ),
+        BlocProvider(
+          // Menginisialisasi DashboardBloc dan memicu FetchDashboardEvent
+          create: (_) => DashboardBloc(dashboardRepository)..add(FetchDashboardEvent()),
+        ),
       ],
       child: Scaffold(
+        backgroundColor: AppColors.backgroundColor,
         appBar: AppBar(
           title: const Text('Dashboard'),
+          centerTitle: true,
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.primaryColor, AppColors.accentColor],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
+          elevation: 0,
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header Section & Quick Stats Section
               BlocBuilder<DashboardBloc, DashboardState>(
                 builder: (context, state) {
                   if (state is DashboardLoading) {
                     return const Center(child: CircularProgressIndicator());
-                  } else if (state is DashboardLoaded) {
+                  } else if (state is DashboardAllLoaded) { // Menggunakan DashboardAllLoaded
                     final user = state.userResponse.user;
                     final stats = state.userResponse.stats;
+                    final summary = state.targetSummary; // Mendapatkan summary dari state
+                    final percentage = summary.percentageCollected; // Perbaikan persentase di sini
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Halo, ${user.username} 👋",
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        // Header Section
+                        Card(
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.account_circle, size: 40),
+                                    const SizedBox(width: 12),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "Halo, ${user.username}!",
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Text(
+                                          "Selamat datang kembali",
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 20),
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        "Saldo Saat Ini",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: AppColors.textColor,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        formatter.format(stats.sisaSaldo),
+                                        style: const TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.primaryColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Quick Stats Section
+                        const Text(
+                          "Statistik Cepat",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         const SizedBox(height: 8),
-                        const Text("Saldo saat ini:", style: TextStyle(fontSize: 16)),
-                        Text(formatter.format(stats.sisaSaldo),
-                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green)),
-                        const SizedBox(height: 24),
+                        GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: 2,
+                          childAspectRatio: 1.5,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          children: [
+                            _buildStatCard(
+                              "Total Pemasukan",
+                              formatter.format(stats.totalPemasukan),
+                              Icons.trending_up,
+                              Colors.blue,
+                            ),
+                            _buildStatCard(
+                              "Total Pengeluaran",
+                              formatter.format(stats.totalPengeluaran),
+                              Icons.trending_down,
+                              Colors.orange,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Target Section (Dipindahkan ke dalam BlocBuilder DashboardAllLoaded)
+                        Card(
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Progress Target 🎯",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                LinearProgressIndicator(
+                                  // PERBAIKAN: Jika backend sudah mengembalikan nilai persentase (misal 0.6 untuk 0.6%),
+                                  // maka jangan dikalikan 100 lagi untuk progress indicator.
+                                  // ProgressIndicator butuh nilai antara 0.0 - 1.0.
+                                  // Jadi, jika 0.6% = 0.6, maka nilai yang dibutuhkan untuk progress adalah 0.6 / 100 = 0.006.
+                                  // Jika backend mengembalikan 0.6 dan Anda ingin 0.6% tampil di UI, maka untuk progress indicator
+                                  // Anda harus membagi dengan 100 (0.6 / 100).
+                                  value: percentage / 100, // Misal: 0.6 / 100 = 0.006
+                                  minHeight: 12,
+                                  backgroundColor: Colors.grey[300],
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    percentage >= 100
+                                        ? Colors.green
+                                        : AppColors.primaryColor,
+                                  ),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      // PERBAIKAN: Hapus perkalian * 100 jika backend sudah memberikan nilai persentase
+                                      // dan Anda ingin menampilkannya sebagai 0.6% bukan 60%.
+                                      "${percentage.toStringAsFixed(1)}%",
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      "${formatter.format(summary.totalCollected.toInt())}/${formatter.format(summary.totalNeeded.toInt())}",
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                _buildTargetDetailRow(
+                                  "Total Target",
+                                  summary.totalTarget.toString(),
+                                  Icons.flag,
+                                ),
+                                _buildTargetDetailRow(
+                                  "Target Aktif",
+                                  summary.activeTargets.toString(),
+                                  Icons.running_with_errors,
+                                ),
+                              
+                              ],
+                            ),
+                          ),
+                        ),
                       ],
                     );
                   } else if (state is DashboardError) {
                     return Center(child: Text('Error: ${state.message}'));
                   }
-
                   return const SizedBox.shrink();
                 },
               ),
 
-              /// Chart Section
-              BlocBuilder<DashboardChartBloc, DashboardChartState>(
-                builder: (context, state) {
-                  if (state is DashboardChartLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (state is DashboardChartLoaded) {
-                    return DashboardChartWidget(
-                      monthlyData: state.monthlyData,
-                      kategoriData: state.kategoriData,
-                    );
-                  } else if (state is DashboardChartError) {
-                    return Text("Gagal memuat grafik: ${state.message}");
-                  }
+              const SizedBox(height: 16),
 
-                  return const SizedBox.shrink();
-                },
+              /// Chart Section (Tetap seperti semula)
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Grafik Keuangan",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      BlocBuilder<DashboardChartBloc, DashboardChartState>(
+                        builder: (context, state) {
+                          if (state is DashboardChartLoading) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          } else if (state is DashboardChartLoaded) {
+                            return DashboardChartWidget(
+                              monthlyData: state.monthlyData,
+                              kategoriData: state.kategoriData,
+                            );
+                          } else if (state is DashboardChartError) {
+                            return Text("Gagal memuat grafik: ${state.message}");
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, size: 18, color: color),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTargetDetailRow(String label, String value, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: AppColors.primaryColor),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 14),
+          ),
+          const Spacer(),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -11,7 +11,13 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       emit(DashboardLoading());
       try {
         final userData = await repository.getUserInfo();
-        emit(DashboardLoaded(userData));
+        final targetSummary = await repository.getTargetSummary();
+        emit(
+          DashboardAllLoaded(
+            userResponse: userData,
+            targetSummary: targetSummary,
+          ),
+        );
       } catch (e) {
         emit(DashboardError(e.toString()));
       }
