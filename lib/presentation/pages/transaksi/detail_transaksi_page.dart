@@ -25,7 +25,7 @@ class DetailTransaksiPage extends StatelessWidget {
     final namaKategori = data['nama_kategori'] ?? '-';
     final buktiUrl =
         data['bukti_transaksi'] != null
-            ? 'http://10.0.2.2:8000${data['bukti_transaksi']}'
+            ? 'http://192.168.185.61:8000${data['bukti_transaksi']}'
             : null;
 
     return Scaffold(

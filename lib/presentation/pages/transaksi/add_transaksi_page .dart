@@ -1,14 +1,16 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart'; // ✅ Tambahan untuk BlocListener
-import 'package:geocoding/geocoding.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:hematyu_app_dummy_fix/presentation/camera/bloc/camera_bloc.dart';
+import 'package:hematyu_app_dummy_fix/presentation/camera/bloc/camera_event.dart';
+import 'package:hematyu_app_dummy_fix/presentation/camera/camera_page.dart';
+import 'package:hematyu_app_dummy_fix/presentation/camera/storage_helper.dart';
 import 'package:hematyu_app_dummy_fix/presentation/transaksi/bloc/transaksi_state.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:hematyu_app_dummy_fix/core/maps/map_picker_page.dart';
 import 'package:hematyu_app_dummy_fix/presentation/pages/transaksi/widget/pemasukan_form.dart';
 import 'package:hematyu_app_dummy_fix/presentation/pages/transaksi/widget/pengeluaran_form.dart';
 import 'package:hematyu_app_dummy_fix/presentation/transaksi/bloc/transaksi_bloc.dart'; // ✅ Import Bloc
+import 'package:permission_handler/permission_handler.dart';
 
 class AddTransaksiPage extends StatefulWidget {
   final bool isEdit;
@@ -63,38 +65,33 @@ class _AddTransaksiPageState extends State<AddTransaksiPage> {
     super.dispose();
   }
 
-  Future<void> _onPilihBukti() async {
-    final picker = ImagePicker();
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      builder: (context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Ambil dari Kamera'),
-              onTap: () => Navigator.pop(context, ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.image),
-              title: const Text('Pilih dari Galeri'),
-              onTap: () => Navigator.pop(context, ImageSource.gallery),
-            ),
-          ],
-        );
-      },
+   Future<void> _onPilihBukti() async {
+  final status = await Permission.camera.request();
+
+  if (status.isGranted) {
+    final bloc = context.read<CameraBloc>();
+    final File? file = await Navigator.push<File?>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: bloc,
+          child: const CameraPage(),
+        ),
+      ),
     );
 
-    if (source != null) {
-      final pickedFile = await picker.pickImage(source: source);
-      if (pickedFile != null) {
-        setState(() {
-          buktiPath = pickedFile.path;
-        });
-      }
+    if (file != null) {
+      final saved = await StorageHelper.saveImage(file, 'pemasukan');
+      setState(() {
+        buktiPath = saved.path;
+      });
     }
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Akses kamera ditolak')),
+    );
   }
+}
 
   Future<void> _pilihLokasi() async {
     final result = await Navigator.push(

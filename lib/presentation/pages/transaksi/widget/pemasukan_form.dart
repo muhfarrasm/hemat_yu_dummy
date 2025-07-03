@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_bloc.dart';
@@ -75,26 +77,39 @@ class _PemasukanFormState extends State<PemasukanForm> {
   Widget build(BuildContext context) {
     return BlocListener<TransaksiBloc, TransaksiState>(
       listener: (context, state) {
-        if (state is TransaksiLoading) {
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (_) => const Center(child: CircularProgressIndicator()),
-          );
-        } else {
-          Navigator.of(context, rootNavigator: true).pop(); // Close dialog
+        listener:
+        (context, state) {
+          if (state is TransaksiLoading) {
+            // Tampilkan loading
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (_) => const Center(child: CircularProgressIndicator()),
+            );
+          } else {
+            // Tutup loading dialog jika masih terbuka
+            if (Navigator.canPop(context)) {
+              Navigator.of(context, rootNavigator: true).pop(); // Tutup dialog
+            }
 
-          if (state is TransaksiSuccess && mounted) {
-            Navigator.pop(context);
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
-          } else if (state is TransaksiError) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.error)));
+            if (state is TransaksiSuccess && mounted) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.message)));
+
+              // Pastikan hanya pop form page, bukan back to Welcome
+              Future.delayed(const Duration(milliseconds: 500), () {
+                if (Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop(); // ⬅️ Ini hanya akan pop form-nya
+                }
+              });
+            } else if (state is TransaksiError) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.error)));
+            }
           }
-        }
+        };
       },
       child: Form(
         key: _formKey,
@@ -182,6 +197,7 @@ class _PemasukanFormState extends State<PemasukanForm> {
               maxLines: 2,
             ),
             const SizedBox(height: 16),
+            // Upload Bukti Transaksi
             Row(
               children: [
                 ElevatedButton.icon(
@@ -194,10 +210,38 @@ class _PemasukanFormState extends State<PemasukanForm> {
                   child: Text(
                     widget.buktiPath ?? 'Belum ada file',
                     style: const TextStyle(fontSize: 12),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
+            if (widget.buktiPath != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child:
+                      widget.buktiPath!.startsWith('/data/')
+                          ? Image.file(
+                            File(widget.buktiPath!),
+                            height: 150,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          )
+                          : Image.network(
+                            'http://192.168.185.61:8000/storage/${widget.buktiPath!}',
+                            height: 150,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder:
+                                (context, error, stackTrace) =>
+                                    const Text('Gagal memuat bukti lama'),
+                          ),
+                ),
+              ),
+
+            
+            const SizedBox(height: 24),
             const SizedBox(height: 24),
             TextFormField(
               initialValue: widget.lokasi,

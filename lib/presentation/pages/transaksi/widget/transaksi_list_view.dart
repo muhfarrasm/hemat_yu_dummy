@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hematyu_app_dummy_fix/data/repository/transaksi_repository.dart';
+import 'package:hematyu_app_dummy_fix/presentation/camera/bloc/camera_bloc.dart';
 import 'package:hematyu_app_dummy_fix/presentation/pages/transaksi/add_transaksi_page%20.dart';
 import 'package:hematyu_app_dummy_fix/presentation/pages/transaksi/detail_transaksi_page.dart';
 import 'package:hematyu_app_dummy_fix/presentation/transaksi/bloc/transaksi_bloc.dart';
@@ -59,14 +60,16 @@ class _TransaksiListViewState extends State<TransaksiListView> {
       setState(() => loading = false);
     }
   }
+
   void _showDetail(dynamic item) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => DetailTransaksiPage(
-          data: item,
-          isPemasukan: widget.isPemasukan,
-        ),
+        builder:
+            (_) => DetailTransaksiPage(
+              data: item,
+              isPemasukan: widget.isPemasukan,
+            ),
       ),
     ).then((_) {
       if (mounted) {
@@ -80,11 +83,18 @@ class _TransaksiListViewState extends State<TransaksiListView> {
       context,
       MaterialPageRoute(
         builder:
-            (_) => BlocProvider(
-              create:
-                  (_) => TransaksiBloc(
-                    TransaksiRepository(ServiceHttpClient()),
-                  ), // ✅ Tambahkan provider
+            (_) => MultiBlocProvider(
+              providers: [
+                BlocProvider(
+                  create:
+                      (_) => TransaksiBloc(
+                        TransaksiRepository(ServiceHttpClient()),
+                      ),
+                ),
+                BlocProvider(
+                  create: (_) => CameraBloc(), // ⬅️ Tambahkan ini
+                ),
+              ],
               child: AddTransaksiPage(
                 isEdit: true,
                 isPemasukan: widget.isPemasukan,

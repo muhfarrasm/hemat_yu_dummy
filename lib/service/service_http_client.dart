@@ -6,7 +6,8 @@ import 'package:hematyu_app_dummy_fix/service/secure_storage_service.dart';
 class ServiceHttpClient {
   final _client = http.Client();
   final SecureStorageService _storage = SecureStorageService();
-  final String baseUrl = 'http://10.0.2.2:8000/api';
+  final String baseUrl = 'http://192.168.185.61:8000/api';
+
 
   SecureStorageService get storage => _storage;
 

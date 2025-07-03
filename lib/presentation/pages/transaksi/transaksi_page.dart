@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hematyu_app_dummy_fix/data/repository/transaksi_repository.dart';
+import 'package:hematyu_app_dummy_fix/presentation/camera/bloc/camera_bloc.dart';
 import 'package:hematyu_app_dummy_fix/presentation/pages/transaksi/add_transaksi_page%20.dart';
 
 import 'package:hematyu_app_dummy_fix/presentation/pages/transaksi/widget/transaksi_list_view.dart';
@@ -28,12 +29,19 @@ class TransaksiPage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => BlocProvider(
-                    create: (_) => TransaksiBloc(
-                      TransaksiRepository(ServiceHttpClient()),
-                    ),
-                    child: const AddTransaksiPage(),
-                  ),
+                  builder:
+                      (_) => MultiBlocProvider(
+                        providers: [
+                          BlocProvider(
+                            create:
+                                (_) => TransaksiBloc(
+                                  TransaksiRepository(ServiceHttpClient()),
+                                ),
+                          ),
+                          BlocProvider(create: (_) => CameraBloc()),
+                        ],
+                        child: const AddTransaksiPage(),
+                      ),
                 ),
               );
             },
@@ -48,20 +56,14 @@ class TransaksiPage extends StatelessWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 8),
-          TransaksiListView(
-            endpoint: '/pemasukan',
-            isPemasukan: true,
-          ),
+          TransaksiListView(endpoint: '/pemasukan', isPemasukan: true),
           SizedBox(height: 16),
           Text(
             'Semua Pengeluaran',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 8),
-          TransaksiListView(
-            endpoint: '/pengeluaran',
-            isPemasukan: false,
-          ),
+          TransaksiListView(endpoint: '/pengeluaran', isPemasukan: false),
         ],
       ),
     );
