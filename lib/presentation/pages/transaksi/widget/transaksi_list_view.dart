@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hematyu_app_dummy_fix/data/repository/transaksi_repository.dart';
 import 'package:hematyu_app_dummy_fix/presentation/pages/transaksi/add_transaksi_page%20.dart';
+import 'package:hematyu_app_dummy_fix/presentation/pages/transaksi/detail_transaksi_page.dart';
 import 'package:hematyu_app_dummy_fix/presentation/transaksi/bloc/transaksi_bloc.dart';
 import 'package:hematyu_app_dummy_fix/service/service_http_client.dart';
 import 'package:intl/intl.dart';
@@ -58,7 +59,21 @@ class _TransaksiListViewState extends State<TransaksiListView> {
       setState(() => loading = false);
     }
   }
-
+  void _showDetail(dynamic item) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DetailTransaksiPage(
+          data: item,
+          isPemasukan: widget.isPemasukan,
+        ),
+      ),
+    ).then((_) {
+      if (mounted) {
+        _loadData();
+      }
+    });
+  }
 
   void _handleEdit(dynamic item) {
     Navigator.push(
@@ -180,7 +195,12 @@ class _TransaksiListViewState extends State<TransaksiListView> {
                 // Icon edit & delete horizontal
                 Row(
                   children: [
-                    
+                    IconButton(
+                      icon: const Icon(Icons.info_outline),
+                      color: Colors.teal,
+                      onPressed: () => _showDetail(item),
+                      tooltip: 'Detail',
+                    ),
                     IconButton(
                       icon: const Icon(Icons.edit),
                       color: Colors.blue,

@@ -1,34 +1,57 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart'; // ✅ Tambahan untuk BlocListener
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:hematyu_app_dummy_fix/core/camera/camera_page.dart';
+import 'package:hematyu_app_dummy_fix/presentation/transaksi/bloc/transaksi_state.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:hematyu_app_dummy_fix/core/maps/map_picker_page.dart';
 import 'package:hematyu_app_dummy_fix/presentation/pages/transaksi/widget/pemasukan_form.dart';
 import 'package:hematyu_app_dummy_fix/presentation/pages/transaksi/widget/pengeluaran_form.dart';
+import 'package:hematyu_app_dummy_fix/presentation/transaksi/bloc/transaksi_bloc.dart'; // ✅ Import Bloc
 
 class AddTransaksiPage extends StatefulWidget {
-  const AddTransaksiPage({super.key});
+  final bool isEdit;
+  final bool isPemasukan;
+  final int? transaksiId;
+  final Map<String, dynamic>? initialData;
+
+  const AddTransaksiPage({
+    super.key,
+    this.isEdit = false,
+    this.isPemasukan = true,
+    this.transaksiId,
+    this.initialData,
+  });
 
   @override
   State<AddTransaksiPage> createState() => _AddTransaksiPageState();
 }
 
 class _AddTransaksiPageState extends State<AddTransaksiPage> {
-  final _formKey = GlobalKey<FormState>();
   final TextEditingController jumlahController = TextEditingController();
   final TextEditingController tanggalController = TextEditingController();
   final TextEditingController deskripsiController = TextEditingController();
+  final TextEditingController lokasiController = TextEditingController();
 
-  bool isPemasukan = true;
   int? selectedKategoriId;
   String? buktiPath;
-  String? lokasi;
+  bool isPemasukanLocal = true;
 
   @override
   void initState() {
     super.initState();
-    _getUserLocation();
+    isPemasukanLocal = widget.isPemasukan;
+
+    if (widget.isEdit && widget.initialData != null) {
+      final data = widget.initialData!;
+      jumlahController.text = data['jumlah']?.toString() ?? '';
+      tanggalController.text = data['tanggal']?.toString().substring(0, 10) ?? '';
+      deskripsiController.text = data['deskripsi'] ?? '';
+      lokasiController.text = data['lokasi'] ?? '';
+      selectedKategoriId = data['kategori_id'];
+      buktiPath = data['bukti_transaksi'];
+    }
   }
 
   @override
@@ -36,106 +59,145 @@ class _AddTransaksiPageState extends State<AddTransaksiPage> {
     jumlahController.dispose();
     tanggalController.dispose();
     deskripsiController.dispose();
+    lokasiController.dispose();
     super.dispose();
   }
 
   Future<void> _onPilihBukti() async {
-    final File? result = await Navigator.push<File>(
-      context,
-      MaterialPageRoute(builder: (_) => const CameraPage()),
+    final picker = ImagePicker();
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Ambil dari Kamera'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.image),
+              title: const Text('Pilih dari Galeri'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+          ],
+        );
+      },
     );
 
-    if (result != null && mounted) {
+    if (source != null) {
+      final pickedFile = await picker.pickImage(source: source);
+      if (pickedFile != null) {
+        setState(() {
+          buktiPath = pickedFile.path;
+        });
+      }
+    }
+  }
+
+  Future<void> _pilihLokasi() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const MapPickerPage()),
+    );
+
+    if (result != null) {
       setState(() {
-        buktiPath = result.path;
+        lokasiController.text = result;
       });
     }
   }
 
-  //lokasi GPS
-  // Menggunakan Geolocator untuk mendapatkan lokasi GPS
-  Future<void> _getUserLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
-
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-    if (permission == LocationPermission.deniedForever) return;
-
-    Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
-
-    List<Placemark> placemarks = await placemarkFromCoordinates(
-      position.latitude,
-      position.longitude,
-    );
-
-    final place = placemarks.first;
-    setState(() {
-      lokasi =
-          "${place.street}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea}";
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Tambah Transaksi')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            ToggleButtons(
-              isSelected: [isPemasukan, !isPemasukan],
-              onPressed: (index) {
-                setState(() => isPemasukan = index == 0);
-              },
-              children: const [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Pemasukan'),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Pengeluaran'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
+    // ✅ Tambahkan BlocListener untuk menangani success/error state
+    return BlocListener<TransaksiBloc, TransaksiState>(
+      listener: (context, state) {
+        if (state is TransaksiSuccess) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message)),
+          );
+          Navigator.pop(context);
+        } else if (state is TransaksiError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.error)),
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.isEdit ? 'Edit Transaksi' : 'Tambah Transaksi'),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16),
+          child: ListView(
+            children: [
+              ToggleButtons(
+                isSelected: [isPemasukanLocal, !isPemasukanLocal],
+                onPressed: widget.isEdit
+                    ? null
+                    : (index) {
+                        setState(() {
+                          isPemasukanLocal = index == 0;
+                        });
+                      },
+                children: const [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text('Pemasukan'),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text('Pengeluaran'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
 
-            isPemasukan
-                ? PemasukanForm(
-                  jumlahController: jumlahController,
-                  tanggalController: tanggalController,
-                  deskripsiController: deskripsiController,
-                  selectedKategoriId: selectedKategoriId,
-                  onKategoriChanged: (id) {
-                    setState(() {
-                      selectedKategoriId = id;
-                    });
-                  },
-                  onPilihBukti: _onPilihBukti,
-                  buktiPath: buktiPath,
-                  lokasi: lokasi ?? 'Mengambil lokasi...',
-                )
-                : PengeluaranForm(
-                  jumlahController: jumlahController,
-                  tanggalController: tanggalController,
-                  deskripsiController: deskripsiController,
-                  selectedKategoriId: selectedKategoriId,
-                  onKategoriChanged: (id) {
-                    setState(() {
-                      selectedKategoriId = id;
-                    });
-                  },
-                  onPilihBukti: _onPilihBukti,
-                  buktiPath: buktiPath,
-                  lokasi: lokasi ?? 'Mengambil lokasi...',
-                ),
-          ],
+              isPemasukanLocal
+                  ? PemasukanForm(
+                      jumlahController: jumlahController,
+                      tanggalController: tanggalController,
+                      deskripsiController: deskripsiController,
+                      selectedKategoriId: selectedKategoriId,
+                      onKategoriChanged: (id) {
+                        setState(() {
+                          selectedKategoriId = id;
+                        });
+                      },
+                      onPilihBukti: _onPilihBukti,
+                      buktiPath: buktiPath,
+                      lokasi: lokasiController.text,
+                      onPilihLokasi: _pilihLokasi,
+                      isEdit: widget.isEdit,
+                      transaksiId: widget.transaksiId,
+                      submitLabel:
+                          widget.isEdit ? 'Simpan Perubahan' : 'Simpan Pemasukan',
+                    )
+                  : PengeluaranForm(
+                      jumlahController: jumlahController,
+                      tanggalController: tanggalController,
+                      deskripsiController: deskripsiController,
+                      selectedKategoriId: selectedKategoriId,
+                      onKategoriChanged: (id) {
+                        setState(() {
+                          selectedKategoriId = id;
+                        });
+                      },
+                      onPilihBukti: _onPilihBukti,
+                      buktiPath: buktiPath,
+                      lokasi: lokasiController.text,
+                      onPilihLokasi: _pilihLokasi,
+                      isEdit: widget.isEdit,
+                      transaksiId: widget.transaksiId,
+                      submitLabel: widget.isEdit
+                          ? 'Simpan Perubahan'
+                          : 'Simpan Pengeluaran',
+                    ),
+            ],
+          ),
         ),
       ),
     );
