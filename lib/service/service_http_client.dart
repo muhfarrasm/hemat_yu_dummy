@@ -70,10 +70,9 @@ class ServiceHttpClient {
 
     if (file != null) {
       final fileName = file.path.split('/').last;
-      request.files.add(await http.MultipartFile.fromPath(
-        'bukti_transaksi',
-        file.path,
-      ));
+      request.files.add(
+        await http.MultipartFile.fromPath('bukti_transaksi', file.path),
+      );
     }
 
     print('📤 Multipart Request to: $uri');
@@ -89,10 +88,20 @@ class ServiceHttpClient {
 
     print('📤 GET Request to: $url');
 
-    final response = await _client.get(
-      url,
-      headers: headers,
-    );
+    final response = await _client.get(url, headers: headers);
+
+    print('✅ Response Status: ${response.statusCode}');
+    print('✅ Response Body: ${response.body}');
+    return response;
+  }
+
+  Future<http.Response> delete(String path, {bool authorized = false}) async {
+    final url = Uri.parse('$baseUrl$path');
+    final headers = await _getHeaders(authorized: authorized);
+
+    print('🗑️ DELETE Request to: $url');
+
+    final response = await _client.delete(url, headers: headers);
 
     print('✅ Response Status: ${response.statusCode}');
     print('✅ Response Body: ${response.body}');

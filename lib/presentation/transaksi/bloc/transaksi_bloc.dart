@@ -44,5 +44,39 @@ class TransaksiBloc extends Bloc<TransaksiEvent, TransaksiState> {
         emit(TransaksiError(e.toString()));
       }
     });
+    on<UpdatePemasukan>((event, emit) async {
+      emit(TransaksiLoading());
+      try {
+        await repository.updatePemasukan(event.id, event.data);
+        emit(TransaksiSuccess("Berhasil memperbarui pemasukan"));
+      } catch (e) {
+        emit(TransaksiError("Gagal memperbarui pemasukan: ${e.toString()}"));
+      }
+    });
+
+    on<UpdatePengeluaran>((event, emit) async {
+      emit(TransaksiLoading());
+      try {
+        await repository.updatePengeluaran(event.id, event.data);
+        emit(TransaksiSuccess("Berhasil memperbarui pengeluaran"));
+      } catch (e) {
+        emit(TransaksiError("Gagal memperbarui pengeluaran: ${e.toString()}"));
+      }
+    });
+
+    on<DeleteTransaksi>((event, emit) async {
+  emit(TransaksiLoading());
+  try {
+    if (event.isPemasukan) {
+      await repository.deletePemasukan(event.id);
+    } else {
+      await repository.deletePengeluaran(event.id);
+    }
+    emit(TransaksiSuccess("Transaksi berhasil dihapus"));
+  } catch (e) {
+    emit(TransaksiError("Gagal menghapus transaksi: $e"));
+  }
+});
+
   }
 }
