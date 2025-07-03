@@ -1,4 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:hematyu_app_dummy_fix/core/camera/camera_page.dart';
+import 'package:hematyu_app_dummy_fix/presentation/pages/transaksi/widget/pemasukan_form.dart';
+import 'package:hematyu_app_dummy_fix/presentation/pages/transaksi/widget/pengeluaran_form.dart';
 
 class AddTransaksiPage extends StatefulWidget {
   const AddTransaksiPage({super.key});
@@ -9,103 +16,126 @@ class AddTransaksiPage extends StatefulWidget {
 
 class _AddTransaksiPageState extends State<AddTransaksiPage> {
   final _formKey = GlobalKey<FormState>();
-  bool isPemasukan = true;
-
   final TextEditingController jumlahController = TextEditingController();
   final TextEditingController tanggalController = TextEditingController();
   final TextEditingController deskripsiController = TextEditingController();
 
+  bool isPemasukan = true;
   int? selectedKategoriId;
+  String? buktiPath;
+  String? lokasi;
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserLocation();
+  }
+
+  @override
+  void dispose() {
+    jumlahController.dispose();
+    tanggalController.dispose();
+    deskripsiController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onPilihBukti() async {
+    final File? result = await Navigator.push<File>(
+      context,
+      MaterialPageRoute(builder: (_) => const CameraPage()),
+    );
+
+    if (result != null && mounted) {
+      setState(() {
+        buktiPath = result.path;
+      });
+    }
+  }
+
+  //lokasi GPS
+  // Menggunakan Geolocator untuk mendapatkan lokasi GPS
+  Future<void> _getUserLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.deniedForever) return;
+
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    List<Placemark> placemarks = await placemarkFromCoordinates(
+      position.latitude,
+      position.longitude,
+    );
+
+    final place = placemarks.first;
+    setState(() {
+      lokasi =
+          "${place.street}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea}";
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Tambah Transaksi'),
-      ),
+      appBar: AppBar(title: const Text('Tambah Transaksi')),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              ToggleButtons(
-                isSelected: [isPemasukan, !isPemasukan],
-                onPressed: (index) {
-                  setState(() => isPemasukan = index == 0);
-                },
-                children: const [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('Pemasukan'),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('Pengeluaran'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
+        child: ListView(
+          children: [
+            ToggleButtons(
+              isSelected: [isPemasukan, !isPemasukan],
+              onPressed: (index) {
+                setState(() => isPemasukan = index == 0);
+              },
+              children: const [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Text('Pemasukan'),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Text('Pengeluaran'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
 
-              TextFormField(
-                controller: jumlahController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Jumlah'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Jumlah tidak boleh kosong' : null,
-              ),
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: tanggalController,
-                readOnly: true,
-                decoration: const InputDecoration(labelText: 'Tanggal'),
-                onTap: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime(2023),
-                    lastDate: DateTime(2100),
-                  );
-                  if (date != null) {
-                    tanggalController.text = date.toIso8601String().substring(0, 10);
-                  }
-                },
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Tanggal tidak boleh kosong' : null,
-              ),
-              const SizedBox(height: 16),
-
-              // TODO: Dropdown kategori (API)
-              const Text("Dropdown kategori (belum diisi)"),
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: deskripsiController,
-                maxLines: 2,
-                decoration: const InputDecoration(labelText: 'Deskripsi (opsional)'),
-              ),
-              const SizedBox(height: 16),
-
-              // TODO: Upload bukti transaksi (kamera/gallery)
-              const Text("Upload bukti transaksi (belum diisi)"),
-              const SizedBox(height: 16),
-
-              // TODO: Lokasi GPS
-              const Text("Lokasi GPS (auto)"),
-
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    // TODO: Call Bloc to add transaksi
-                    print('Submit Transaksi');
-                  }
-                },
-                child: const Text('Simpan'),
-              ),
-            ],
-          ),
+            isPemasukan
+                ? PemasukanForm(
+                  jumlahController: jumlahController,
+                  tanggalController: tanggalController,
+                  deskripsiController: deskripsiController,
+                  selectedKategoriId: selectedKategoriId,
+                  onKategoriChanged: (id) {
+                    setState(() {
+                      selectedKategoriId = id;
+                    });
+                  },
+                  onPilihBukti: _onPilihBukti,
+                  buktiPath: buktiPath,
+                  lokasi: lokasi ?? 'Mengambil lokasi...',
+                )
+                : PengeluaranForm(
+                  jumlahController: jumlahController,
+                  tanggalController: tanggalController,
+                  deskripsiController: deskripsiController,
+                  selectedKategoriId: selectedKategoriId,
+                  onKategoriChanged: (id) {
+                    setState(() {
+                      selectedKategoriId = id;
+                    });
+                  },
+                  onPilihBukti: _onPilihBukti,
+                  buktiPath: buktiPath,
+                  lokasi: lokasi ?? 'Mengambil lokasi...',
+                ),
+          ],
         ),
       ),
     );
