@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_bloc.dart';
+import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_event.dart';
+import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_state.dart';
 import 'package:hematyu_app_dummy_fix/presentation/transaksi/bloc/transaksi_bloc.dart';
 import 'package:hematyu_app_dummy_fix/presentation/transaksi/bloc/transaksi_event.dart';
 import 'package:hematyu_app_dummy_fix/presentation/transaksi/bloc/transaksi_state.dart';
@@ -11,7 +14,12 @@ class PengeluaranForm extends StatefulWidget {
   final int? selectedKategoriId;
   final Function(int?) onKategoriChanged;
   final VoidCallback onPilihBukti;
+  final VoidCallback onPilihLokasi;
   final String? buktiPath;
+  final String lokasi;
+  final bool isEdit;
+  final int? transaksiId;
+  final String submitLabel;
 
   const PengeluaranForm({
     super.key,
@@ -21,7 +29,12 @@ class PengeluaranForm extends StatefulWidget {
     required this.selectedKategoriId,
     required this.onKategoriChanged,
     required this.onPilihBukti,
+    required this.onPilihLokasi,
     this.buktiPath,
+    required this.lokasi,
+    this.isEdit = false,
+    this.transaksiId,
+    this.submitLabel = 'Simpan Pengeluaran',
   });
 
   @override
@@ -31,19 +44,31 @@ class PengeluaranForm extends StatefulWidget {
 class _PengeluaranFormState extends State<PengeluaranForm> {
   final _formKey = GlobalKey<FormState>();
 
+  @override
+  void initState() {
+    super.initState();
+    context.read<KategoriBloc>().add(FetchKategoriPengeluaran());
+  }
+
   void _submitForm() {
     if (_formKey.currentState?.validate() != true) return;
 
     final data = {
       "jumlah": widget.jumlahController.text,
       "tanggal": widget.tanggalController.text,
-      "kategori_id": widget.selectedKategoriId.toString(),
+      "kategori_id": widget.selectedKategoriId,
       "deskripsi": widget.deskripsiController.text,
       "bukti_transaksi": widget.buktiPath ?? "",
-      "lokasi": "Lokasi Dinamis", // akan diganti nanti dengan GPS
+      "lokasi": widget.lokasi,
     };
 
-    context.read<TransaksiBloc>().add(SubmitPengeluaran(data));
+    if (widget.isEdit && widget.transaksiId != null) {
+      context.read<TransaksiBloc>().add(
+        UpdatePengeluaran(widget.transaksiId!, data),
+      );
+    } else {
+      context.read<TransaksiBloc>().add(SubmitPengeluaran(data));
+    }
   }
 
   @override
@@ -56,15 +81,22 @@ class _PengeluaranFormState extends State<PengeluaranForm> {
             barrierDismissible: false,
             builder: (_) => const Center(child: CircularProgressIndicator()),
           );
-        } else if (state is TransaksiSuccess) {
-          Navigator.pop(context); // close dialog
-          Navigator.pop(context); // back
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
-        } else if (state is TransaksiError) {
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.error)));
+        } else {
+          Navigator.of(context, rootNavigator: true).pop(); // Close dialog
+
+          if (state is TransaksiSuccess && mounted) {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
+          } else if (state is TransaksiError) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.error)));
+          }
         }
       },
+
       child: Form(
         key: _formKey,
         child: Column(
@@ -74,10 +106,52 @@ class _PengeluaranFormState extends State<PengeluaranForm> {
               controller: widget.jumlahController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(labelText: 'Jumlah'),
-              validator: (value) => value == null || value.isEmpty ? 'Jumlah wajib diisi' : null,
+              validator:
+                  (value) =>
+                      value == null || value.isEmpty
+                          ? 'Jumlah wajib diisi'
+                          : null,
             ),
             const SizedBox(height: 16),
 
+            // ✅ Perbaikan Dropdown Kategori
+            BlocBuilder<KategoriBloc, KategoriState>(
+              builder: (context, state) {
+                if (state is KategoriLoading) {
+                  return const CircularProgressIndicator();
+                } else if (state is KategoriLoaded) {
+                  final kategoriList = state.kategoriList;
+
+                  return DropdownButtonFormField<int>(
+                    value:
+                        kategoriList.any(
+                              (e) => e.id == widget.selectedKategoriId,
+                            )
+                            ? widget.selectedKategoriId
+                            : null,
+                    onChanged: widget.onKategoriChanged,
+                    items:
+                        kategoriList.map((kategori) {
+                          return DropdownMenuItem<int>(
+                            value: kategori.id,
+                            child: Text(kategori.namaKategori),
+                          );
+                        }).toList(),
+                    decoration: const InputDecoration(
+                      labelText: 'Kategori Pengeluaran',
+                    ),
+                    validator:
+                        (value) =>
+                            value == null ? 'Kategori harus dipilih' : null,
+                  );
+                } else if (state is KategoriError) {
+                  return Text('Gagal memuat kategori: ${state.message}');
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+
+            const SizedBox(height: 16),
             TextFormField(
               controller: widget.tanggalController,
               readOnly: true,
@@ -90,29 +164,24 @@ class _PengeluaranFormState extends State<PengeluaranForm> {
                   lastDate: DateTime(2100),
                 );
                 if (picked != null) {
-                  widget.tanggalController.text = picked.toIso8601String().substring(0, 10);
+                  widget.tanggalController.text = picked
+                      .toIso8601String()
+                      .substring(0, 10);
                 }
               },
-              validator: (value) => value == null || value.isEmpty ? 'Tanggal wajib diisi' : null,
-            ),
-            const SizedBox(height: 16),
-
-            DropdownButtonFormField<int>(
-              value: widget.selectedKategoriId,
-              onChanged: widget.onKategoriChanged,
-              items: const [
-                DropdownMenuItem(value: 3, child: Text('Makan')),
-                DropdownMenuItem(value: 4, child: Text('Transportasi')),
-                DropdownMenuItem(value: 5, child: Text('Belanja')),
-              ],
-              decoration: const InputDecoration(labelText: 'Kategori Pengeluaran'),
-              validator: (value) => value == null ? 'Pilih kategori' : null,
+              validator:
+                  (value) =>
+                      value == null || value.isEmpty
+                          ? 'Tanggal wajib diisi'
+                          : null,
             ),
             const SizedBox(height: 16),
 
             TextFormField(
               controller: widget.deskripsiController,
-              decoration: const InputDecoration(labelText: 'Deskripsi (opsional)'),
+              decoration: const InputDecoration(
+                labelText: 'Deskripsi (opsional)',
+              ),
               maxLines: 2,
             ),
             const SizedBox(height: 16),
@@ -135,10 +204,27 @@ class _PengeluaranFormState extends State<PengeluaranForm> {
             ),
             const SizedBox(height: 24),
 
+            TextFormField(
+              initialValue: widget.lokasi,
+              readOnly: true,
+              decoration: const InputDecoration(labelText: 'Lokasi'),
+            ),
+            const SizedBox(height: 8),
+
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: widget.onPilihLokasi,
+                icon: const Icon(Icons.location_on),
+                label: const Text("Tambah Lokasi"),
+              ),
+            ),
+            const SizedBox(height: 16),
+
             Center(
               child: ElevatedButton(
                 onPressed: _submitForm,
-                child: const Text("Simpan Pengeluaran"),
+                child: Text(widget.submitLabel),
               ),
             ),
           ],
