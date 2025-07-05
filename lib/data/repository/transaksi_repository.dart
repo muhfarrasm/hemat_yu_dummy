@@ -40,11 +40,15 @@ class TransaksiRepository {
     if (response.statusCode == 201) {
       return PemasukanResponse.fromJson(jsonDecode(body));
     } else {
-      throw Exception(jsonDecode(body)['message'] ?? 'Gagal menambahkan pemasukan');
+      throw Exception(
+        jsonDecode(body)['message'] ?? 'Gagal menambahkan pemasukan',
+      );
     }
   }
 
-  Future<PengeluaranResponse> addPengeluaran(AddPengeluaranRequest request) async {
+  Future<PengeluaranResponse> addPengeluaran(
+    AddPengeluaranRequest request,
+  ) async {
     final fields = {
       'jumlah': request.jumlah,
       'tanggal': request.tanggal,
@@ -73,7 +77,113 @@ class TransaksiRepository {
     if (response.statusCode == 201) {
       return PengeluaranResponse.fromJson(jsonDecode(body));
     } else {
-      throw Exception(jsonDecode(body)['message'] ?? 'Gagal menambahkan pengeluaran');
+      throw Exception(
+        jsonDecode(body)['message'] ?? 'Gagal menambahkan pengeluaran',
+      );
+    }
+  }
+
+  Future<void> updatePemasukan(int id, Map<String, dynamic> data) async {
+    final fields = <String, String>{
+      'jumlah': data['jumlah'].toString(),
+      'tanggal': data['tanggal'].toString(),
+      'kategori_id': data['kategori_id'].toString(),
+      if (data['deskripsi'] != null) 'deskripsi': data['deskripsi'].toString(),
+      if (data['lokasi'] != null) 'lokasi': data['lokasi'].toString(),
+    };
+
+    File? file;
+    final path = data['bukti_transaksi'];
+    if (path != null && path != "") {
+      final f = File(path);
+      if (await f.exists()) {
+        file = f;
+      }
+    }
+
+    print('📝 Update Pemasukan: $id');
+    print('   ➕ Fields: $fields');
+    print('   🖼️ File: ${file?.path}');
+
+    final response = await _httpClient.postMultipart(
+      '/pemasukan/$id?_method=PUT',
+      fields: fields,
+      file: file,
+      authorized: true,
+    );
+
+    final body = await response.stream.bytesToString();
+    print('📥 Response Status: ${response.statusCode}');
+    print('📥 Response Body: $body');
+
+    if (response.statusCode != 200) {
+      throw Exception(jsonDecode(body)['message'] ?? 'Gagal update pemasukan');
+    }
+  }
+
+  Future<void> updatePengeluaran(int id, Map<String, dynamic> data) async {
+    final fields = <String, String>{
+      'jumlah': data['jumlah'].toString(),
+      'tanggal': data['tanggal'].toString(),
+      'kategori_id': data['kategori_id'].toString(),
+      if (data['deskripsi'] != null) 'deskripsi': data['deskripsi'].toString(),
+      if (data['lokasi'] != null) 'lokasi': data['lokasi'].toString(),
+    };
+
+    File? file;
+    final path = data['bukti_transaksi'];
+    if (path != null && path != "") {
+      final f = File(path);
+      if (await f.exists()) {
+        file = f;
+      }
+    }
+
+    print('📝 Update Pengeluaran: $id');
+    print('   ➖ Fields: $fields');
+    print('   🖼️ File: ${file?.path}');
+
+    final response = await _httpClient.postMultipart(
+      '/pengeluaran/$id?_method=PUT',
+      fields: fields,
+      file: file,
+      authorized: true,
+    );
+
+    final body = await response.stream.bytesToString();
+    print('📥 Response Status: ${response.statusCode}');
+    print('📥 Response Body: $body');
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        jsonDecode(body)['message'] ?? 'Gagal update pengeluaran',
+      );
+    }
+  }
+
+  Future<void> deletePemasukan(int id) async {
+    final response = await _httpClient.delete(
+      '/pemasukan/$id',
+      authorized: true,
+    );
+    if (response.statusCode != 200) {
+      final body = response.body;
+      throw Exception(
+        jsonDecode(body)['message'] ?? 'Gagal menghapus pemasukan',
+      );
+    }
+  }
+
+  Future<void> deletePengeluaran(int id) async {
+    final response = await _httpClient.delete(
+      '/pengeluaran/$id',
+      authorized: true,
+    );
+    if (response.statusCode != 200) {
+      final body = response.body;
+      throw Exception(
+        jsonDecode(body)['message'] ?? 'Gagal menghapus pengeluaran',
+      );
     }
   }
 }
