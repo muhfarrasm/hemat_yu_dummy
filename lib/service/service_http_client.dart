@@ -6,7 +6,7 @@ import 'package:hematyu_app_dummy_fix/service/secure_storage_service.dart';
 class ServiceHttpClient {
   final _client = http.Client();
   final SecureStorageService _storage = SecureStorageService();
-  final String baseUrl = 'http://192.168.185.61:8000/api';
+  final String baseUrl = 'http://192.168.15.61:8000/api';
 
 
   SecureStorageService get storage => _storage;
@@ -110,4 +110,28 @@ class ServiceHttpClient {
   }
 
   Future<void> clearToken() async => await _storage.clearToken();
+
+  Future<http.Response> put(
+  String path,
+  dynamic body, {
+  bool authorized = false,
+}) async {
+  final url = Uri.parse('$baseUrl$path');
+  final headers = await _getHeaders(authorized: authorized);
+
+  print('📤 PUT Request to: $url');
+  print('📤 Body: ${jsonEncode(body)}');
+
+  final response = await _client.put(
+    url,
+    headers: headers,
+    body: jsonEncode(body),
+  );
+
+  print('✅ Response Status: ${response.statusCode}');
+  print('✅ Response Body: ${response.body}');
+  return response;
 }
+
+}
+
