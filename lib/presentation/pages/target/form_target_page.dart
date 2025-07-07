@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hematyu_app_dummy_fix/data/repository/kategori_repository.dart';
+import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_bloc.dart';
+import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_event.dart';
+import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_state.dart';
 import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_type.dart';
 import 'package:hematyu_app_dummy_fix/service/service_http_client.dart';
 import 'package:intl/intl.dart';
@@ -56,6 +60,7 @@ class _FormTargetPageState extends State<FormTargetPage> {
 
     _selectedKategoriId = widget.initialData?['kategori_target_id'];
 
+    context.read<KategoriBloc>().add(FetchKategori(JenisKategori.target));
     _fetchKategori();
     _fetchKategoriPengeluaran();
     _fetchPemasukan();
@@ -150,7 +155,11 @@ class _FormTargetPageState extends State<FormTargetPage> {
       final client = ServiceHttpClient(); // Pastikan ada file ini
       final response =
           widget.isEdit
-              ? await client.put('/target/${widget.initialData!['id']}', body)
+              ? await client.put(
+                '/target/${widget.initialData!['id']}',
+                body,
+                authorized: true,
+              )
               : await client.post('/target', body, authorized: true);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -249,9 +258,15 @@ class _FormTargetPageState extends State<FormTargetPage> {
                     (value) =>
                         value == null || value.isEmpty ? 'Wajib diisi' : null,
               ),
+             
 
               DropdownButtonFormField<int>(
-                value: _selectedKategoriId,
+                value:
+                    _kategoriList.any(
+                          (item) => item['id'] == _selectedKategoriId,
+                        )
+                        ? _selectedKategoriId
+                        : null,
                 items:
                     _kategoriList.map((item) {
                       return DropdownMenuItem<int>(

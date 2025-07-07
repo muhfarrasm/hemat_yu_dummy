@@ -24,10 +24,56 @@ class _TargetPageState extends State<TargetPage> {
     super.initState();
     _futureTargets = TargetRepository(ServiceHttpClient()).getTargets();
   }
-    void _fetchTargets() {
+
+  void _fetchTargets() {
     setState(() {
       _futureTargets = TargetRepository(ServiceHttpClient()).getTargets();
     });
+  }
+
+  Future<void> _deleteTarget(int id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Hapus Target'),
+            content: const Text(
+              'Apakah kamu yakin ingin menghapus target ini?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Batal'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Hapus'),
+              ),
+            ],
+          ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final response = await TargetRepository(
+        ServiceHttpClient(),
+      ).deleteTarget(id);
+      if (response) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Berhasil dihapus')));
+        _fetchTargets();
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Gagal menghapus target')));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
   }
 
   @override
@@ -56,7 +102,76 @@ class _TargetPageState extends State<TargetPage> {
           }
 
           return ListView(
-            children: targets.map((t) => TargetCard(target: t)).toList(),
+            children:
+                targets.map((target) {
+                  return TargetCard(
+                    target: target,
+                    onEdit: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (_) => FormTargetPage(
+                                isEdit: true,
+                                initialData: {
+                                  'id': target.id,
+                                  'nama_target': target.namaTarget,
+                                  'deskripsi': target.deskripsi,
+                                  'target_dana': target.targetDana,
+                                  'target_tanggal':
+                                      target.targetTanggal,
+                                  'nama_kategori':
+                                      null, // sesuaikan jika ada
+                                }, // Pastikan TargetResponse punya toJson
+                              ),
+                        ),
+                      );
+                      if (result == true) _fetchTargets();
+                    },
+                    onDelete: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder:
+                            (ctx) => AlertDialog(
+                              title: const Text("Konfirmasi"),
+                              content: const Text(
+                                "Yakin ingin menghapus target ini?",
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, false),
+                                  child: const Text("Batal"),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, true),
+                                  child: const Text("Hapus"),
+                                ),
+                              ],
+                            ),
+                      );
+
+                      if (confirmed == true) {
+                        final success = await TargetRepository(
+                          ServiceHttpClient(),
+                        ).deleteTarget(target.id);
+                        if (success) {
+                          _fetchTargets();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Target berhasil dihapus'),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Gagal menghapus target'),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                  );
+                }).toList(),
           );
         },
       ),
