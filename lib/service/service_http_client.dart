@@ -8,7 +8,6 @@ class ServiceHttpClient {
   final SecureStorageService _storage = SecureStorageService();
   final String baseUrl = 'http://192.168.15.61:8000/api';
 
-
   SecureStorageService get storage => _storage;
 
   Future<Map<String, String>> _getHeaders({bool authorized = false}) async {
@@ -29,28 +28,32 @@ class ServiceHttpClient {
     return headers;
   }
 
+  // POST
   Future<http.Response> post(
     String path,
     dynamic body, {
     bool authorized = false,
   }) async {
-    final url = Uri.parse('$baseUrl$path');
-    final headers = await _getHeaders(authorized: authorized);
+    return _retryRequest(() async {
+      final url = Uri.parse('$baseUrl$path');
+      final headers = await _getHeaders(authorized: authorized);
 
-    print('📤 POST Request to: $url');
-    print('📤 Body: ${jsonEncode(body)}');
+      print('📤 POST Request to: $url');
+      print('📤 Body: ${jsonEncode(body)}');
 
-    final response = await _client.post(
-      url,
-      headers: headers,
-      body: jsonEncode(body),
-    );
+      final response = await _client.post(
+        url,
+        headers: headers,
+        body: jsonEncode(body),
+      );
 
-    print('✅ Response Status: ${response.statusCode}');
-    print('✅ Response Body: ${response.body}');
-    return response;
+      print('✅ Response Status: ${response.statusCode}');
+      print('✅ Response Body: ${response.body}');
+      return response;
+    });
   }
 
+  // POST Multipart
   Future<http.StreamedResponse> postMultipart(
     String path, {
     required Map<String, String> fields,
@@ -83,55 +86,113 @@ class ServiceHttpClient {
     return await request.send();
   }
 
+  // GET
   Future<http.Response> get(String path, {bool authorized = false}) async {
-    final url = Uri.parse('$baseUrl$path');
-    final headers = await _getHeaders(authorized: authorized);
+    return _retryRequest(() async {
+      final url = Uri.parse('$baseUrl$path');
+      final headers = await _getHeaders(authorized: authorized);
 
-    print('📤 GET Request to: $url');
+      print('📤 GET Request to: $url');
 
-    final response = await _client.get(url, headers: headers);
+      final response = await _client.get(url, headers: headers);
 
-    print('✅ Response Status: ${response.statusCode}');
-    print('✅ Response Body: ${response.body}');
-    return response;
+      print('✅ Response Status: ${response.statusCode}');
+      print('✅ Response Body: ${response.body}');
+      return response;
+    });
   }
 
+  // DELETE
   Future<http.Response> delete(String path, {bool authorized = false}) async {
-    final url = Uri.parse('$baseUrl$path');
-    final headers = await _getHeaders(authorized: authorized);
+    return _retryRequest(() async {
+      final url = Uri.parse('$baseUrl$path');
+      final headers = await _getHeaders(authorized: authorized);
 
-    print('🗑️ DELETE Request to: $url');
+      print('🗑️ DELETE Request to: $url');
 
-    final response = await _client.delete(url, headers: headers);
+      final response = await _client.delete(url, headers: headers);
 
-    print('✅ Response Status: ${response.statusCode}');
-    print('✅ Response Body: ${response.body}');
-    return response;
+      print('✅ Response Status: ${response.statusCode}');
+      print('✅ Response Body: ${response.body}');
+      return response;
+    });
   }
 
   Future<void> clearToken() async => await _storage.clearToken();
 
+  //PUT
   Future<http.Response> put(
-  String path,
-  dynamic body, {
-  bool authorized = false,
-}) async {
-  final url = Uri.parse('$baseUrl$path');
-  final headers = await _getHeaders(authorized: authorized);
+    String path,
+    dynamic body, {
+    bool authorized = false,
+  }) async {
+    return _retryRequest(() async {
+      final url = Uri.parse('$baseUrl$path');
+      final headers = await _getHeaders(authorized: authorized);
 
-  print('📤 PUT Request to: $url');
-  print('📤 Body: ${jsonEncode(body)}');
+      print('📤 PUT Request to: $url');
+      print('📤 Body: ${jsonEncode(body)}');
 
-  final response = await _client.put(
-    url,
-    headers: headers,
-    body: jsonEncode(body),
-  );
+      final response = await _client.put(
+        url,
+        headers: headers,
+        body: jsonEncode(body),
+      );
 
-  print('✅ Response Status: ${response.statusCode}');
-  print('✅ Response Body: ${response.body}');
-  return response;
+      print('✅ Response Status: ${response.statusCode}');
+      print('✅ Response Body: ${response.body}');
+      return response;
+    });
+  }
+
+  Future<bool> refreshToken() async {
+    try {
+      final oldToken = await _storage.getToken();
+      if (oldToken == null) return false;
+
+      final headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $oldToken',
+      };
+
+      final url = Uri.parse('$baseUrl/auth/refresh');
+      final response = await _client.post(url, headers: headers);
+
+      print("🔄 Refresh Token Response: ${response.statusCode}");
+      print("🔄 Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        final newToken = jsonResponse['data']['token'];
+        if (newToken != null) {
+          await _storage.saveToken(newToken);
+          print("✅ Token diperbarui");
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      print("❌ Gagal refresh token: $e");
+      return false;
+    }
+  }
+
+  Future<http.Response> _retryRequest(
+    Future<http.Response> Function() request,
+  ) async {
+    var response = await request();
+
+    if (response.statusCode == 401) {
+      print("⏰ Token expired, mencoba refresh...");
+      final success = await refreshToken();
+
+      if (success) {
+        // Coba ulangi permintaan setelah refresh token
+        response = await request();
+      }
+    }
+
+    return response;
+  }
 }
-
-}
-
