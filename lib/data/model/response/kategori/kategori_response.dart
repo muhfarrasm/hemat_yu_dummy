@@ -11,6 +11,10 @@ class KategoriResponse {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  final List<Map<String, dynamic>>? targets;
+  final List<Map<String, dynamic>>? pengeluaran;
+  final List<Map<String, dynamic>>? pemasukan;
+
   KategoriResponse({
     required this.id,
     required this.namaKategori,
@@ -23,6 +27,10 @@ class KategoriResponse {
     this.persentasePencapaian,
     required this.createdAt,
     required this.updatedAt,
+
+    this.targets,
+    this.pengeluaran,
+    this.pemasukan,
   });
 
   factory KategoriResponse.fromJson(Map<String, dynamic> json) {
@@ -41,6 +49,16 @@ class KategoriResponse {
       persentasePencapaian: json['persentase_pencapaian'] != null ? double.tryParse(json['persentase_pencapaian'].toString()) : null,
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
+
+      targets: json['targets'] != null
+          ? List<Map<String, dynamic>>.from(json['targets'])
+          : null,
+      pengeluaran: json['pengeluaran'] != null
+          ? List<Map<String, dynamic>>.from(json['pengeluaran'])
+          : null,
+      pemasukan: json['pemasukan'] != null
+          ? List<Map<String, dynamic>>.from(json['pemasukan'])
+          : null,
     );
   }
 }

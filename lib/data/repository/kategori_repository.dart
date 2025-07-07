@@ -37,6 +37,29 @@ class KategoriRepository {
     throw Exception('Gagal mengambil kategori target');
   }
 }
+  // Untuk ambil data yang ada dalam kategori tersebut pemasukan/pengeluaran/targets
+Future<KategoriResponse> getDetailKategori({
+  required JenisKategori type,
+  required int id,
+}) async {
+  final response = await _client.get('${_endpoint(type)}/$id', authorized: true);
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+
+    
+    final kategoriJson = switch (type) {
+      JenisKategori.pengeluaran => data['data']['kategori'],
+      JenisKategori.target => data['data']['kategori'],
+      JenisKategori.pemasukan => data['data'], 
+    };
+
+    return KategoriResponse.fromJson(kategoriJson);
+  } else {
+    throw Exception('Gagal mengambil detail kategori');
+  }
+}
+
+
 
 Future<void> createKategori({
   required JenisKategori type,
