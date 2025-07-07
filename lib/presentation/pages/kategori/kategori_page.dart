@@ -72,11 +72,20 @@ class _KategoriPageState extends State<KategoriPage>
       value: _bloc,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Manajemen Kategori'),
+           elevation: 0,
+          backgroundColor: Colors.white,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back_rounded, color: Colors.black87),
             onPressed: widget.onBackToDashboard,
           ),
+          title: const Text('Manajemen Kategori',
+          style: TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+          ),
+          ),
+
           bottom: TabBar(
             controller: _tabController,
             tabs: const [
@@ -112,3 +121,5 @@ class _KategoriPageState extends State<KategoriPage>
     );
   }
 }
+
+

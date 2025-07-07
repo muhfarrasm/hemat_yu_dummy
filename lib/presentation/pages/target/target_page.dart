@@ -3,6 +3,9 @@ import 'package:hematyu_app_dummy_fix/data/model/response/target/target_response
 import 'package:hematyu_app_dummy_fix/data/repository/target_repository.dart';
 import 'package:hematyu_app_dummy_fix/presentation/pages/target/widget/target_card.dart';
 import 'package:hematyu_app_dummy_fix/service/service_http_client.dart';
+import 'package:hematyu_app_dummy_fix/presentation/pages/target/form_target_page.dart';
+import 'package:hematyu_app_dummy_fix/data/repository/kategori_repository.dart';
+import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_type.dart'; // enum JenisKategori.target
 
 class TargetPage extends StatefulWidget {
   final VoidCallback onBackToDashboard;
@@ -20,6 +23,11 @@ class _TargetPageState extends State<TargetPage> {
   void initState() {
     super.initState();
     _futureTargets = TargetRepository(ServiceHttpClient()).getTargets();
+  }
+    void _fetchTargets() {
+    setState(() {
+      _futureTargets = TargetRepository(ServiceHttpClient()).getTargets();
+    });
   }
 
   @override
@@ -53,8 +61,14 @@ class _TargetPageState extends State<TargetPage> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Arahkan ke form tambah target nanti
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const FormTargetPage()),
+          );
+          if (result == true) {
+            _fetchTargets(); // refresh setelah tambah/edit target
+          }
         },
         child: const Icon(Icons.add),
       ),
