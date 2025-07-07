@@ -99,8 +99,18 @@ Future<void> deleteKategori({
   required int id,
 }) async {
   final response = await _client.delete('${_endpoint(type)}/$id', authorized: true);
-  if (response.statusCode != 200) throw Exception('Gagal menghapus kategori');
+
+  if (response.statusCode == 200) return;
+
+  final body = jsonDecode(response.body);
+  if (response.statusCode == 400 || response.statusCode == 422) {
+    final message = body['message'] ?? 'Kategori sedang digunakan';
+    throw Exception(message);
+  }
+
+  throw Exception('Gagal menghapus kategori');
 }
+
 
 String _endpoint(JenisKategori type) {
   switch (type) {

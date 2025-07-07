@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hematyu_app_dummy_fix/data/repository/kategori_repository.dart';
 import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_bloc.dart';
 import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_event.dart';
 import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_state.dart';
 import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_type.dart';
 import 'package:hematyu_app_dummy_fix/presentation/pages/kategori/detail_kategori_page.dart';
 import 'package:hematyu_app_dummy_fix/presentation/pages/kategori/form_kategori_page.dart';
+import 'package:hematyu_app_dummy_fix/service/service_http_client.dart';
 
 class KategoriListView extends StatelessWidget {
   final JenisKategori jenis;
@@ -80,10 +82,53 @@ class KategoriListView extends StatelessWidget {
                       ),
                       const SizedBox(width: 8), // nanti diisi tombol delete
 
-                      const SizedBox(width: 4),
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {},
+                        onPressed: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder:
+                                (_) => AlertDialog(
+                                  title: const Text('Hapus Kategori'),
+                                  content: const Text(
+                                    'Yakin ingin menghapus kategori ini?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed:
+                                          () => Navigator.pop(context, false),
+                                      child: const Text('Batal'),
+                                    ),
+                                    TextButton(
+                                      onPressed:
+                                          () => Navigator.pop(context, true),
+                                      child: const Text('Hapus'),
+                                    ),
+                                  ],
+                                ),
+                          );
+
+                          if (confirm != true) return;
+
+                          try {
+                            await KategoriRepository(
+                              ServiceHttpClient(),
+                            ).deleteKategori(type: jenis, id: kategori.id);
+
+                            context.read<KategoriBloc>().add(
+                              FetchKategori(jenis),
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('✅ Kategori berhasil dihapus'),
+                              ),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('❌ ${e.toString()}')),
+                            );
+                          }
+                        },
                       ),
                     ],
                   ),
@@ -99,7 +144,6 @@ class KategoriListView extends StatelessWidget {
                       ),
                     );
                   },
-                  
                 ),
               );
             },
