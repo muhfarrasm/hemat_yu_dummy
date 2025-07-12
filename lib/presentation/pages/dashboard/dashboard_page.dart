@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hematyu_app_dummy_fix/core/constants/colors.dart';
+import 'package:hematyu_app_dummy_fix/presentation/auth/login_page.dart';
 import 'package:hematyu_app_dummy_fix/presentation/chart/bloc/dashboard_chart_bloc.dart';
 import 'package:hematyu_app_dummy_fix/presentation/dashboard/bloc/dashboard_bloc.dart';
 import 'package:hematyu_app_dummy_fix/presentation/dashboard/bloc/dashboard_event.dart';
@@ -34,7 +35,10 @@ class DashboardPage extends StatelessWidget {
         ),
         BlocProvider(
           // Menginisialisasi DashboardBloc dan memicu FetchDashboardEvent
-          create: (_) => DashboardBloc(dashboardRepository)..add(FetchDashboardEvent()),
+          create:
+              (_) =>
+                  DashboardBloc(dashboardRepository)
+                    ..add(FetchDashboardEvent()),
         ),
       ],
       child: Scaffold(
@@ -52,6 +56,12 @@ class DashboardPage extends StatelessWidget {
             ),
           ),
           elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () => _showLogoutConfirmationDialog(context),
+            ),
+          ],
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -63,11 +73,15 @@ class DashboardPage extends StatelessWidget {
                 builder: (context, state) {
                   if (state is DashboardLoading) {
                     return const Center(child: CircularProgressIndicator());
-                  } else if (state is DashboardAllLoaded) { // Menggunakan DashboardAllLoaded
+                  } else if (state is DashboardAllLoaded) {
+                    // Menggunakan DashboardAllLoaded
                     final user = state.userResponse.user;
                     final stats = state.userResponse.stats;
-                    final summary = state.targetSummary; // Mendapatkan summary dari state
-                    final percentage = summary.percentageCollected; // Perbaikan persentase di sini
+                    final summary =
+                        state.targetSummary; // Mendapatkan summary dari state
+                    final percentage =
+                        summary
+                            .percentageCollected; // Perbaikan persentase di sini
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,10 +99,17 @@ class DashboardPage extends StatelessWidget {
                               children: [
                                 Row(
                                   children: [
-                                    const Icon(Icons.account_circle, size: 40),
+                                    CircleAvatar(
+                                      radius:
+                                          20, // setengah dari width/height yang diinginkan
+                                      backgroundImage: AssetImage(
+                                        'assets/images/luffy.jpg',
+                                      ),
+                                    ),
                                     const SizedBox(width: 12),
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           "Halo, ${user.username}!",
@@ -112,11 +133,14 @@ class DashboardPage extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: AppColors.primaryColor.withOpacity(0.1),
+                                    color: AppColors.primaryColor.withOpacity(
+                                      0.1,
+                                    ),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       const Text(
                                         "Saldo Saat Ini",
@@ -194,8 +218,7 @@ class DashboardPage extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 12),
                                 LinearProgressIndicator(
-                                  
-                                  value: percentage / 100, 
+                                  value: percentage / 100,
                                   minHeight: 12,
                                   backgroundColor: Colors.grey[300],
                                   valueColor: AlwaysStoppedAnimation<Color>(
@@ -207,10 +230,10 @@ class DashboardPage extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 8),
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      
                                       "${percentage.toStringAsFixed(1)}%",
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
@@ -235,7 +258,6 @@ class DashboardPage extends StatelessWidget {
                                   summary.activeTargets.toString(),
                                   Icons.running_with_errors,
                                 ),
-                              
                               ],
                             ),
                           ),
@@ -251,7 +273,7 @@ class DashboardPage extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              /// Chart Section 
+              /// Chart Section
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(
@@ -274,14 +296,17 @@ class DashboardPage extends StatelessWidget {
                         builder: (context, state) {
                           if (state is DashboardChartLoading) {
                             return const Center(
-                                child: CircularProgressIndicator());
+                              child: CircularProgressIndicator(),
+                            );
                           } else if (state is DashboardChartLoaded) {
                             return DashboardChartWidget(
                               monthlyData: state.monthlyData,
                               kategoriData: state.kategoriData,
                             );
                           } else if (state is DashboardChartError) {
-                            return Text("Gagal memuat grafik: ${state.message}");
+                            return Text(
+                              "Gagal memuat grafik: ${state.message}",
+                            );
                           }
                           return const SizedBox.shrink();
                         },
@@ -297,12 +322,15 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -321,20 +349,14 @@ class DashboardPage extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
               value,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -349,20 +371,53 @@ class DashboardPage extends StatelessWidget {
         children: [
           Icon(icon, size: 20, color: AppColors.primaryColor),
           const SizedBox(width: 12),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 14),
-          ),
+          Text(label, style: const TextStyle(fontSize: 14)),
           const Spacer(),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
         ],
       ),
     );
   }
+}
+
+void _showLogoutConfirmationDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Konfirmasi Logout'),
+        content: const Text('Apakah Anda yakin ingin keluar dari aplikasi?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+              _performLogout(context);
+            },
+            child: const Text('Logout', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+void _performLogout(BuildContext context) {
+  // Here you would typically:
+  // 1. Clear any user session or tokens
+  // 2. Navigate to login page and clear navigation stack
+
+  // Example navigation (adjust the route name to your login route)
+  Navigator.of(context).pushAndRemoveUntil(
+    MaterialPageRoute(
+      builder: (context) => const LoginPage(),
+    ), // Replace with your login page
+    (Route<dynamic> route) => false,
+  );
 }
