@@ -45,55 +45,82 @@ class _DetailKategoriPageState extends State<DetailKategoriPage> {
             children: [
               Text("Deskripsi: ${kategori.deskripsi ?? '-'}"),
               const SizedBox(height: 10),
-              if (widget.jenis == JenisKategori.target)
-                ...kategori.targets?.map(
-                      (target) => ListTile(
-                        title: Text(target['nama_target']),
-                        subtitle: Text(
-                          "Rp${target['terkumpul']} / Rp${target['target_dana']}",
-                        ),
-                        trailing: Icon(
-                          Icons.circle,
-                          color:
-                              target['status'] == 'aktif'
-                                  ? Colors.green
-                                  : Colors.red,
-                          size: 12,
-                        ),
+              if (widget.jenis == JenisKategori.target) ...[
+                Text(
+                  "Total Terkumpul: Rp${kategori.totalTerkumpul?.toStringAsFixed(0) ?? '0'}",
+                ),
+                Text(
+                  "Total Target Dana: Rp${kategori.totalTargetDana?.toStringAsFixed(0) ?? '0'}",
+                ),
+                LinearProgressIndicator(
+                  value: (kategori.persentasePencapaian ?? 0) / 100,
+                  minHeight: 8,
+                ),
+                const SizedBox(height: 12),
+                ...?kategori.targets?.map(
+                  (target) => Card(
+                    child: ListTile(
+                      title: Text(target['nama_target']),
+                      subtitle: Text(
+                        "Rp${target['terkumpul']} / Rp${target['target_dana']}",
                       ),
-                    ) ??
-                    [],
-              if (widget.jenis == JenisKategori.pemasukan)
-                ...kategori.pemasukan?.map(
-                      (item) => ListTile(
-                        title: Text("Rp${item['jumlah']}"),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(item['deskripsi'] ?? '-'),
-                            Text(item['tanggal'] ?? '-'),
-                            Text(item['lokasi'] ?? '-'),
-                          ],
-                        ),
+                      trailing: Icon(
+                        Icons.circle,
+                        color:
+                            target['status'] == 'aktif'
+                                ? Colors.green
+                                : Colors.red,
+                        size: 12,
                       ),
-                    ) ??
-                    [],
-              if (widget.jenis == JenisKategori.pengeluaran)
-                ...kategori.pengeluaran?.map(
-                      (item) => ListTile(
-                        title: Text("Rp${item['jumlah']}"),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (item['deskripsi'] != null)
-                              Text(item['deskripsi']),
-                            Text(item['tanggal']),
-                            Text(item['lokasi']),
-                          ],
-                        ),
+                    ),
+                  ),
+                ),
+              ],
+              if (widget.jenis == JenisKategori.pemasukan) ...[
+                ...?kategori.pemasukan?.map(
+                  (item) => Card(
+                    child: ListTile(
+                      title: Text("Rp${item['jumlah']}"),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(item['deskripsi'] ?? '-'),
+                          Text(item['tanggal'] ?? '-'),
+                          Text(item['lokasi'] ?? '-'),
+                        ],
                       ),
-                    ) ??
-                    [],
+                    ),
+                  ),
+                ),
+              ],
+              if (widget.jenis == JenisKategori.pengeluaran) ...[
+                Text(
+                  "Anggaran: Rp${kategori.anggaran?.toStringAsFixed(0) ?? '0'}",
+                ),
+                Text(
+                  "Total Pengeluaran: Rp${kategori.totalPengeluaran?.toStringAsFixed(0) ?? '0'}",
+                ),
+                Text(
+                  "Sisa Anggaran: Rp${kategori.sisaAnggaran?.toStringAsFixed(0) ?? '0'}",
+                ),
+                const SizedBox(height: 12),
+                ...?kategori.pengeluaran?.map(
+                  (item) => Card(
+                    child: ListTile(
+                      title: Text("Rp${item['jumlah']}"),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (item['deskripsi'] != null)
+                            Text(item['deskripsi']),
+                          Text(item['tanggal']),
+                          Text(item['lokasi']),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ],
           );
         },

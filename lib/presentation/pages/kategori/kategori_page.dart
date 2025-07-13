@@ -74,7 +74,16 @@ class _KategoriPageState extends State<KategoriPage>
       child: Scaffold(
         appBar: AppBar(
           elevation: 0,
-          backgroundColor: AppColors.primaryColor,
+          backgroundColor: Colors.transparent, // Set to transparent
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.primaryColor, AppColors.accentColor],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
           leading: Padding(
             padding: const EdgeInsets.only(left: 16.0),
             child: CircleAvatar(
@@ -152,7 +161,7 @@ class _KategoriPageState extends State<KategoriPage>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.arrow_downward_rounded, size: 18),
-                          SizedBox(width: 4), // Adjusted width
+                          SizedBox(width: 2), // Adjusted width
                           Expanded(
                             // Added Expanded to prevent overflow
                             child: Text(
@@ -169,7 +178,7 @@ class _KategoriPageState extends State<KategoriPage>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.arrow_upward_rounded, size: 18),
-                          SizedBox(width: 4), // Adjusted width
+                          SizedBox(width: 2), // Adjusted width
                           Expanded(
                             // Added Expanded to prevent overflow
                             child: Text(
@@ -186,7 +195,7 @@ class _KategoriPageState extends State<KategoriPage>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.track_changes_rounded, size: 18),
-                          SizedBox(width: 4), // Adjusted width
+                          SizedBox(width: 2), // Adjusted width
                           Expanded(
                             // Added Expanded to prevent overflow
                             child: Text(
@@ -198,9 +207,12 @@ class _KategoriPageState extends State<KategoriPage>
                         ],
                       ),
                     ),
+                    
                   ],
                 ),
+                
               ),
+              
             ),
           ),
         ),
@@ -216,6 +228,7 @@ class _KategoriPageState extends State<KategoriPage>
               ],
             ), // Background color for the body
           ),
+          
 
           child: TabBarView(
             controller: _tabController,

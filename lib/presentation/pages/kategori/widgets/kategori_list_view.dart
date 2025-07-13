@@ -40,18 +40,45 @@ class KategoriListView extends StatelessWidget {
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (kategori.deskripsi != null &&
-                          kategori.deskripsi!.isNotEmpty)
-                        Text(kategori.deskripsi!),
-                      if (jenis == JenisKategori.pengeluaran &&
-                          kategori.anggaran != null)
-                        Text(
-                          "Anggaran: Rp${kategori.anggaran?.toStringAsFixed(0)}",
+                      if (jenis == JenisKategori.pengeluaran)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Anggaran: Rp${kategori.anggaran?.toStringAsFixed(0)}",
+                            ),
+                            Text(
+                              "Total Pengeluaran: Rp${kategori.pengeluaranSumJumlah.toStringAsFixed(0)}",
+                            ),
+                            Text(
+                              "Sisa: Rp${(kategori.anggaran! - kategori.pengeluaranSumJumlah).toStringAsFixed(0)}",
+                            ),
+                          ],
                         ),
+                      // ✅ TAMBAHAN TARGET
                       if (jenis == JenisKategori.target)
-                        Text(
-                          "Terkumpul: Rp${kategori.totalTerkumpul?.toStringAsFixed(0) ?? '0'} / "
-                          "Target: Rp${kategori.totalTargetDana?.toStringAsFixed(0) ?? '0'}",
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Rp${kategori.totalTerkumpul?.toStringAsFixed(0) ?? '0'} / Rp${kategori.totalTargetDana?.toStringAsFixed(0) ?? '0'}",
+                            ),
+                            const SizedBox(height: 4), // jarak kecil biar rapi
+                            LinearProgressIndicator(
+                              value: ((kategori.persentasePencapaian ?? 0) /
+                                      100)
+                                  .clamp(0.0, 1.0),
+                              minHeight: 6,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "${kategori.persentasePencapaian?.toStringAsFixed(1) ?? '0'}%", // ✅ TAMPIL PERSENAN
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
                         ),
                     ],
                   ),
