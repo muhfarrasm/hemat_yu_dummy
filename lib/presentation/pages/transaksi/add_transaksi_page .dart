@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart'; // ✅ Tambahan untuk BlocListener
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hematyu_app_dummy_fix/core/constants/colors.dart';
 import 'package:hematyu_app_dummy_fix/presentation/camera/bloc/camera_bloc.dart';
-import 'package:hematyu_app_dummy_fix/presentation/camera/bloc/camera_event.dart';
 import 'package:hematyu_app_dummy_fix/presentation/camera/camera_page.dart';
 import 'package:hematyu_app_dummy_fix/presentation/camera/storage_helper.dart';
 import 'package:hematyu_app_dummy_fix/presentation/transaksi/bloc/transaksi_state.dart';
@@ -48,7 +48,8 @@ class _AddTransaksiPageState extends State<AddTransaksiPage> {
     if (widget.isEdit && widget.initialData != null) {
       final data = widget.initialData!;
       jumlahController.text = data['jumlah']?.toString() ?? '';
-      tanggalController.text = data['tanggal']?.toString().substring(0, 10) ?? '';
+      tanggalController.text =
+          data['tanggal']?.toString().substring(0, 10) ?? '';
       deskripsiController.text = data['deskripsi'] ?? '';
       lokasiController.text = data['lokasi'] ?? '';
       selectedKategoriId = data['kategori_id'];
@@ -65,33 +66,31 @@ class _AddTransaksiPageState extends State<AddTransaksiPage> {
     super.dispose();
   }
 
-   Future<void> _onPilihBukti() async {
-  final status = await Permission.camera.request();
+  Future<void> _onPilihBukti() async {
+    final status = await Permission.camera.request();
 
-  if (status.isGranted) {
-    final bloc = context.read<CameraBloc>();
-    final File? file = await Navigator.push<File?>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: bloc,
-          child: const CameraPage(),
+    if (status.isGranted) {
+      final bloc = context.read<CameraBloc>();
+      final File? file = await Navigator.push<File?>(
+        context,
+        MaterialPageRoute(
+          builder:
+              (_) => BlocProvider.value(value: bloc, child: const CameraPage()),
         ),
-      ),
-    );
+      );
 
-    if (file != null) {
-      final saved = await StorageHelper.saveImage(file, 'pemasukan');
-      setState(() {
-        buktiPath = saved.path;
-      });
+      if (file != null) {
+        final saved = await StorageHelper.saveImage(file, 'pemasukan');
+        setState(() {
+          buktiPath = saved.path;
+        });
+      }
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Akses kamera ditolak')));
     }
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Akses kamera ditolak')),
-    );
   }
-}
 
   Future<void> _pilihLokasi() async {
     final result = await Navigator.push(
@@ -108,53 +107,95 @@ class _AddTransaksiPageState extends State<AddTransaksiPage> {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ Tambahkan BlocListener untuk menangani success/error state
     return BlocListener<TransaksiBloc, TransaksiState>(
       listener: (context, state) {
         if (state is TransaksiSuccess) {
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.message)));
           Navigator.pop(context);
         } else if (state is TransaksiError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.error)));
         }
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.isEdit ? 'Edit Transaksi' : 'Tambah Transaksi'),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: ListView(
-            children: [
-              ToggleButtons(
-                isSelected: [isPemasukanLocal, !isPemasukanLocal],
-                onPressed: widget.isEdit
-                    ? null
-                    : (index) {
-                        setState(() {
-                          isPemasukanLocal = index == 0;
-                        });
-                      },
-                children: const [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('Pemasukan'),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('Pengeluaran'),
-                  ),
-                ],
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.primaryColor, AppColors.accentColor],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              const SizedBox(height: 16),
+            ),
+          ),
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 16.0),
+            child: CircleAvatar(
+              backgroundColor: AppColors.lightTextColor,
+              child: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_rounded,
+                  color: AppColors.primaryColor,
+                ),
+                onPressed: () => Navigator.pop(context),
+                tooltip: 'Kembali',
+              ),
+            ),
+          ),
 
-              isPemasukanLocal
-                  ? PemasukanForm(
+          title: Text(
+            widget.isEdit ? 'Edit Transaksi' : 'Tambah Transaksi',
+            style: const TextStyle(
+              color: AppColors.lightTextColor,
+              fontWeight: FontWeight.w800,
+              fontSize: 24,
+            ),
+          ),
+        ),
+        backgroundColor: AppColors.backgroundColor,
+        body: RefreshIndicator(
+          onRefresh: () async {
+            setState(() {
+              buktiPath = buktiPath; // Contoh: tidak berubah apa pun.
+            });
+          },
+
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                ToggleButtons(
+                  isSelected: [isPemasukanLocal, !isPemasukanLocal],
+                  onPressed:
+                      widget.isEdit
+                          ? null
+                          : (index) {
+                            setState(() {
+                              isPemasukanLocal = index == 0;
+                            });
+                          },
+                  children: const [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('Pemasukan'),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('Pengeluaran'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                isPemasukanLocal
+                    ? PemasukanForm(
                       jumlahController: jumlahController,
                       tanggalController: tanggalController,
                       deskripsiController: deskripsiController,
@@ -171,9 +212,11 @@ class _AddTransaksiPageState extends State<AddTransaksiPage> {
                       isEdit: widget.isEdit,
                       transaksiId: widget.transaksiId,
                       submitLabel:
-                          widget.isEdit ? 'Simpan Perubahan' : 'Simpan Pemasukan',
+                          widget.isEdit
+                              ? 'Simpan Perubahan'
+                              : 'Simpan Pemasukan',
                     )
-                  : PengeluaranForm(
+                    : PengeluaranForm(
                       jumlahController: jumlahController,
                       tanggalController: tanggalController,
                       deskripsiController: deskripsiController,
@@ -189,11 +232,13 @@ class _AddTransaksiPageState extends State<AddTransaksiPage> {
                       onPilihLokasi: _pilihLokasi,
                       isEdit: widget.isEdit,
                       transaksiId: widget.transaksiId,
-                      submitLabel: widget.isEdit
-                          ? 'Simpan Perubahan'
-                          : 'Simpan Pengeluaran',
+                      submitLabel:
+                          widget.isEdit
+                              ? 'Simpan Perubahan'
+                              : 'Simpan Pengeluaran',
                     ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
