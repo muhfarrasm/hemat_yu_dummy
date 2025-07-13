@@ -3,9 +3,8 @@ import 'package:hematyu_app_dummy_fix/data/model/response/target/target_response
 import 'package:hematyu_app_dummy_fix/data/repository/target_repository.dart';
 import 'package:hematyu_app_dummy_fix/presentation/pages/target/widget/target_card.dart';
 import 'package:hematyu_app_dummy_fix/service/service_http_client.dart';
-import 'package:hematyu_app_dummy_fix/presentation/pages/target/form_target_page.dart';
-import 'package:hematyu_app_dummy_fix/data/repository/kategori_repository.dart';
-import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_type.dart'; // enum JenisKategori.target
+import 'package:hematyu_app_dummy_fix/presentation/pages/target/form_target_page.dart'; // enum JenisKategori.target
+import 'package:hematyu_app_dummy_fix/core/constants/colors.dart';
 
 class TargetPage extends StatefulWidget {
   final VoidCallback onBackToDashboard;
@@ -80,12 +79,66 @@ class _TargetPageState extends State<TargetPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daftar Target'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: widget.onBackToDashboard,
+        elevation: 0,
+        backgroundColor: Colors.transparent, // ✅ Transparan untuk gradient
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.primaryColor, AppColors.accentColor],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
         ),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16.0),
+          child: CircleAvatar(
+            backgroundColor: AppColors.lightTextColor,
+            child: IconButton(
+              icon: const Icon(
+                Icons.arrow_back_rounded,
+                color: AppColors.primaryColor,
+              ),
+              onPressed: widget.onBackToDashboard,
+              tooltip: 'Kembali',
+            ),
+          ),
+        ),
+         title: Row(
+          children: [
+            const Text(
+              'Daftar Target',
+              style: TextStyle(
+                color: AppColors.lightTextColor,
+                fontWeight: FontWeight.w800,
+                fontSize: 24,
+              ),
+            ),
+              const Spacer(),
+          
+            IconButton(
+              icon: const Icon(
+                Icons.add,
+                color: AppColors.lightTextColor,
+                size: 24,
+              ),
+              tooltip: 'Tambah Target',
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const FormTargetPage()),
+                );
+                if (result == true) {
+                  _fetchTargets();
+                }
+              },
+            ),
+            const SizedBox(width: 2),
+          ],
+        ),
+      
       ),
+       backgroundColor: AppColors.backgroundColor,
       body: FutureBuilder<List<TargetResponse>>(
         future: _futureTargets,
         builder: (context, snapshot) {
@@ -100,8 +153,12 @@ class _TargetPageState extends State<TargetPage> {
           if (targets.isEmpty) {
             return const Center(child: Text('Belum ada target.'));
           }
+          return RefreshIndicator(
+            onRefresh: () async {
+              _fetchTargets();
+            },
 
-          return ListView(
+          child: ListView(
             children:
                 targets.map((target) {
                   return TargetCard(
@@ -172,20 +229,9 @@ class _TargetPageState extends State<TargetPage> {
                     },
                   );
                 }).toList(),
+          ),
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const FormTargetPage()),
-          );
-          if (result == true) {
-            _fetchTargets(); // refresh setelah tambah/edit target
-          }
-        },
-        child: const Icon(Icons.add),
       ),
     );
   }

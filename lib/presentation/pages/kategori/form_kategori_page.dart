@@ -54,27 +54,32 @@ class _FormKategoriPageState extends State<FormKategoriPage> {
 
     final nama = _namaCtrl.text.trim();
     final deskripsi = _deskripsiCtrl.text.trim();
-    final anggaran = widget.jenis == JenisKategori.pengeluaran
-        ? double.tryParse(_anggaranCtrl.text.trim())
-        : null;
+    final anggaran =
+        widget.jenis == JenisKategori.pengeluaran
+            ? double.tryParse(_anggaranCtrl.text.trim())
+            : null;
 
     final bloc = context.read<KategoriBloc>();
 
     if (widget.isEdit) {
-      bloc.add(UpdateKategori(
-        type: widget.jenis,
-        id: widget.initialData!.id,
-        nama: nama,
-        deskripsi: deskripsi,
-        anggaran: anggaran,
-      ));
+      bloc.add(
+        UpdateKategori(
+          type: widget.jenis,
+          id: widget.initialData!.id,
+          nama: nama,
+          deskripsi: deskripsi,
+          anggaran: anggaran,
+        ),
+      );
     } else {
-      bloc.add(AddKategori(
-        type: widget.jenis,
-        nama: nama,
-        deskripsi: deskripsi,
-        anggaran: anggaran,
-      ));
+      bloc.add(
+        AddKategori(
+          type: widget.jenis,
+          nama: nama,
+          deskripsi: deskripsi,
+          anggaran: anggaran,
+        ),
+      );
     }
 
     Navigator.pop(context, true);
@@ -84,8 +89,8 @@ class _FormKategoriPageState extends State<FormKategoriPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        elevation: 0, // ✅ AppBar tanpa shadow
-        backgroundColor: Colors.transparent, // ✅ AppBar transparan
+        elevation: 0,
+        backgroundColor: Colors.transparent,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -98,7 +103,7 @@ class _FormKategoriPageState extends State<FormKategoriPage> {
         leading: Padding(
           padding: const EdgeInsets.only(left: 16.0),
           child: CircleAvatar(
-            backgroundColor: AppColors.lightTextColor, // ✅ Circle putih
+            backgroundColor: AppColors.lightTextColor,
             child: IconButton(
               icon: const Icon(
                 Icons.arrow_back_rounded,
@@ -118,64 +123,77 @@ class _FormKategoriPageState extends State<FormKategoriPage> {
           ),
         ),
       ),
-      backgroundColor: AppColors.backgroundColor, // ✅ Latar belakang terang
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _namaCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Nama Kategori',
-                  border: OutlineInputBorder(), // ✅ Konsisten input style
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.backgroundColor.withOpacity(0.9),
+              AppColors.accentColor.withOpacity(0.1),
+            ],
+          ),
+        ),
+
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _namaCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Nama Kategori',
+                    border: OutlineInputBorder(), 
+                  ),
+                  validator:
+                      (val) =>
+                          val == null || val.isEmpty ? 'Wajib diisi' : null,
                 ),
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Wajib diisi' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _deskripsiCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Deskripsi',
-                  border: OutlineInputBorder(), // ✅
-                ),
-                maxLines: 3,
-              ),
-              if (widget.jenis == JenisKategori.pengeluaran) ...[
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _anggaranCtrl,
+                  controller: _deskripsiCtrl,
                   decoration: const InputDecoration(
-                    labelText: 'Anggaran',
-                    border: OutlineInputBorder(), // ✅
+                    labelText: 'Deskripsi',
+                    border: OutlineInputBorder(), 
                   ),
-                  keyboardType: TextInputType.number,
+                  maxLines: 3,
+                ),
+                if (widget.jenis == JenisKategori.pengeluaran) ...[
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _anggaranCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Anggaran',
+                      border: OutlineInputBorder(), // ✅
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                ],
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _handleSubmit,
+                    icon: const Icon(Icons.save),
+                    label: Text(widget.isEdit ? 'Simpan Perubahan' : 'Tambah'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryColor, // ✅ Tombol hijau
+                      foregroundColor: AppColors.lightTextColor, // ✅ Teks putih
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      textStyle: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
                 ),
               ],
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _handleSubmit,
-                  icon: const Icon(Icons.save),
-                  label: Text(widget.isEdit ? 'Simpan Perubahan' : 'Tambah'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryColor, // ✅ Tombol hijau
-                    foregroundColor: AppColors.lightTextColor, // ✅ Teks putih
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    textStyle: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

@@ -229,16 +229,35 @@ class _KategoriPageState extends State<KategoriPage>
             ), // Background color for the body
           ),
           
-
-          child: TabBarView(
+           child: TabBarView(
             controller: _tabController,
-            children: const [
-              KategoriListView(jenis: JenisKategori.pemasukan),
-              KategoriListView(jenis: JenisKategori.pengeluaran),
-              KategoriListView(jenis: JenisKategori.target),
+            children: [
+              
+              RefreshIndicator(
+                onRefresh: () async {
+                  _bloc.add(FetchKategori(JenisKategori.pemasukan));
+                },
+                child: const KategoriListView(jenis: JenisKategori.pemasukan),
+              ),
+             
+              RefreshIndicator(
+                onRefresh: () async {
+                  _bloc.add(FetchKategori(JenisKategori.pengeluaran));
+                },
+                child: const KategoriListView(jenis: JenisKategori.pengeluaran),
+              ),
+              
+              RefreshIndicator(
+                onRefresh: () async {
+                  _bloc.add(FetchKategori(JenisKategori.target));
+                },
+                child: const KategoriListView(jenis: JenisKategori.target),
+              ),
             ],
           ),
         ),
+
+     
 
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () async {

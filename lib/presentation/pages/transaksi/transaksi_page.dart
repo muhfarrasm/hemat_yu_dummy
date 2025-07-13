@@ -3,8 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hematyu_app_dummy_fix/data/repository/transaksi_repository.dart';
 import 'package:hematyu_app_dummy_fix/presentation/camera/bloc/camera_bloc.dart';
 import 'package:hematyu_app_dummy_fix/presentation/pages/transaksi/add_transaksi_page%20.dart';
-import 'package:hematyu_app_dummy_fix/core/constants/colors.dart'; // ✅ Tambah agar warna sama
-
+import 'package:hematyu_app_dummy_fix/core/constants/colors.dart'; 
 import 'package:hematyu_app_dummy_fix/presentation/pages/transaksi/widget/transaksi_list_view.dart';
 import 'package:hematyu_app_dummy_fix/presentation/transaksi/bloc/transaksi_bloc.dart';
 import 'package:hematyu_app_dummy_fix/service/service_http_client.dart';
@@ -55,7 +54,7 @@ class TransaksiPage extends StatelessWidget {
            IconButton(
             icon: const Icon(
               Icons.add_rounded,
-              color: AppColors.lightTextColor, // ✅ Putih biar match
+              color: AppColors.lightTextColor, 
             ),
             tooltip: 'Tambah Transaksi',
             onPressed: () {
