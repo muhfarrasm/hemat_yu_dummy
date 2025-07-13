@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hematyu_app_dummy_fix/data/repository/transaksi_repository.dart';
 import 'package:hematyu_app_dummy_fix/presentation/camera/bloc/camera_bloc.dart';
 import 'package:hematyu_app_dummy_fix/presentation/pages/transaksi/add_transaksi_page%20.dart';
+import 'package:hematyu_app_dummy_fix/core/constants/colors.dart'; // ✅ Tambah agar warna sama
 
 import 'package:hematyu_app_dummy_fix/presentation/pages/transaksi/widget/transaksi_list_view.dart';
 import 'package:hematyu_app_dummy_fix/presentation/transaksi/bloc/transaksi_bloc.dart';
@@ -17,37 +18,69 @@ class TransaksiPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Transaksi'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: onBackToDashboard,
+        elevation: 0, // ✅ No shadow
+        backgroundColor: Colors.transparent, // ✅ Transparent AppBar
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.primaryColor, AppColors.accentColor],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+         leading: Padding(
+          padding: const EdgeInsets.only(left: 16.0), // ✅ Sama seperti kategori
+          child: CircleAvatar(
+            backgroundColor: AppColors.lightTextColor,
+            child: IconButton(
+              icon: const Icon(
+                Icons.arrow_back_rounded,
+                color: AppColors.primaryColor,
+              ),
+              onPressed: onBackToDashboard,
+              tooltip: 'Kembali',
+            ),
+          ),
+        ),
+        title: const Text(
+          'Transaksi',
+          style: TextStyle(
+            color: AppColors.lightTextColor,
+            fontWeight: FontWeight.w800,
+            fontSize: 24,
+          ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
+           IconButton(
+            icon: const Icon(
+              Icons.add_rounded,
+              color: AppColors.lightTextColor, // ✅ Putih biar match
+            ),
+            tooltip: 'Tambah Transaksi',
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder:
-                      (_) => MultiBlocProvider(
-                        providers: [
-                          BlocProvider(
-                            create:
-                                (_) => TransaksiBloc(
-                                  TransaksiRepository(ServiceHttpClient()),
-                                ),
-                          ),
-                          BlocProvider(create: (_) => CameraBloc()),
-                        ],
-                        child: const AddTransaksiPage(),
+                  builder: (_) => MultiBlocProvider(
+                    providers: [
+                      BlocProvider(
+                        create: (_) => TransaksiBloc(
+                          TransaksiRepository(ServiceHttpClient()),
+                        ),
                       ),
+                      BlocProvider(create: (_) => CameraBloc()),
+                    ],
+                    child: const AddTransaksiPage(),
+                  ),
                 ),
               );
             },
           ),
+          const SizedBox(width: 8),
         ],
       ),
+      backgroundColor: AppColors.backgroundColor,
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: const [
