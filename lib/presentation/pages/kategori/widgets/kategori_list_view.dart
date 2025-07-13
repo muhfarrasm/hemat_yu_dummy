@@ -55,7 +55,7 @@ class KategoriListView extends StatelessWidget {
                             ),
                           ],
                         ),
-                      // ✅ TAMBAHAN TARGET
+                      // target
                       if (jenis == JenisKategori.target)
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
