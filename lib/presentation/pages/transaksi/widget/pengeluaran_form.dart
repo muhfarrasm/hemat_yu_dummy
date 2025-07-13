@@ -5,9 +5,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_bloc.dart';
 import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_event.dart';
 import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_state.dart';
+import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_type.dart';
 import 'package:hematyu_app_dummy_fix/presentation/transaksi/bloc/transaksi_bloc.dart';
 import 'package:hematyu_app_dummy_fix/presentation/transaksi/bloc/transaksi_event.dart';
 import 'package:hematyu_app_dummy_fix/presentation/transaksi/bloc/transaksi_state.dart';
+import 'package:hematyu_app_dummy_fix/core/constants/colors.dart';
 
 class PengeluaranForm extends StatefulWidget {
   final TextEditingController jumlahController;
@@ -49,7 +51,7 @@ class _PengeluaranFormState extends State<PengeluaranForm> {
   @override
   void initState() {
     super.initState();
-    context.read<KategoriBloc>().add(FetchKategoriPengeluaran());
+    context.read<KategoriBloc>().add(FetchKategori(JenisKategori.pengeluaran));
   }
 
   void _submitForm() {
@@ -98,7 +100,7 @@ class _PengeluaranFormState extends State<PengeluaranForm> {
             // Pastikan hanya pop form page, bukan back to Welcome
             Future.delayed(const Duration(milliseconds: 500), () {
               if (Navigator.of(context).canPop()) {
-                Navigator.of(context).pop(); // ⬅️ Ini hanya akan pop form-nya
+                Navigator.of(context).pop(); 
               }
             });
           } else if (state is TransaksiError) {
@@ -117,7 +119,7 @@ class _PengeluaranFormState extends State<PengeluaranForm> {
             TextFormField(
               controller: widget.jumlahController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Jumlah'),
+              decoration: const InputDecoration(labelText: 'Jumlah', prefixIcon: Icon(Icons.attach_money_rounded),),
               validator:
                   (value) =>
                       value == null || value.isEmpty
@@ -126,7 +128,7 @@ class _PengeluaranFormState extends State<PengeluaranForm> {
             ),
             const SizedBox(height: 16),
 
-            // ✅ Perbaikan Dropdown Kategori
+            
             BlocBuilder<KategoriBloc, KategoriState>(
               builder: (context, state) {
                 if (state is KategoriLoading) {
@@ -150,7 +152,7 @@ class _PengeluaranFormState extends State<PengeluaranForm> {
                           );
                         }).toList(),
                     decoration: const InputDecoration(
-                      labelText: 'Kategori Pengeluaran',
+                      labelText: 'Kategori Pengeluaran', prefixIcon: Icon(Icons.category_rounded),
                     ),
                     validator:
                         (value) =>
@@ -167,7 +169,7 @@ class _PengeluaranFormState extends State<PengeluaranForm> {
             TextFormField(
               controller: widget.tanggalController,
               readOnly: true,
-              decoration: const InputDecoration(labelText: 'Tanggal'),
+              decoration: const InputDecoration(labelText: 'Tanggal', prefixIcon: Icon(Icons.calendar_today_rounded),),
               onTap: () async {
                 final picked = await showDatePicker(
                   context: context,
@@ -192,7 +194,7 @@ class _PengeluaranFormState extends State<PengeluaranForm> {
             TextFormField(
               controller: widget.deskripsiController,
               decoration: const InputDecoration(
-                labelText: 'Deskripsi (opsional)',
+                labelText: 'Deskripsi (opsional)',  prefixIcon: Icon(Icons.description_rounded),
               ),
               maxLines: 2,
             ),
@@ -202,8 +204,12 @@ class _PengeluaranFormState extends State<PengeluaranForm> {
               children: [
                 ElevatedButton.icon(
                   onPressed: widget.onPilihBukti,
-                  icon: const Icon(Icons.upload_file),
+                  icon: const Icon(Icons.upload_file, color: Colors.white),
                   label: const Text('Upload Bukti'),
+                   style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryColor, 
+                    foregroundColor: AppColors.lightTextColor, 
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -229,7 +235,7 @@ class _PengeluaranFormState extends State<PengeluaranForm> {
                             fit: BoxFit.cover,
                           )
                           : Image.network(
-                            'http://192.168.185.61:8000/storage/${widget.buktiPath!}',
+                            'http://192.168.48.61:8000/storage/${widget.buktiPath!}',
                             height: 150,
                             width: double.infinity,
                             fit: BoxFit.cover,
@@ -244,7 +250,7 @@ class _PengeluaranFormState extends State<PengeluaranForm> {
             TextFormField(
               initialValue: widget.lokasi,
               readOnly: true,
-              decoration: const InputDecoration(labelText: 'Lokasi'),
+              decoration: const InputDecoration(labelText: 'Lokasi', prefixIcon: Icon(Icons.location_on_rounded),),
             ),
             const SizedBox(height: 8),
 
@@ -252,18 +258,29 @@ class _PengeluaranFormState extends State<PengeluaranForm> {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 onPressed: widget.onPilihLokasi,
-                icon: const Icon(Icons.location_on),
+                icon: const Icon(Icons.add_location_alt_rounded, color: Colors.white),
                 label: const Text("Tambah Lokasi"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryColor, 
+                  foregroundColor: AppColors.lightTextColor, 
+                ),
               ),
             ),
             const SizedBox(height: 16),
 
-            Center(
-              child: ElevatedButton(
+           Center(
+              child: ElevatedButton.icon(
                 onPressed: _submitForm,
-                child: Text(widget.submitLabel),
+                icon: const Icon(Icons.save_rounded, color: Colors.white),
+                label: Text(widget.submitLabel),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryColor, 
+                  foregroundColor: AppColors.lightTextColor, 
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                ),
               ),
-            ),
+           ),
           ],
         ),
       ),
