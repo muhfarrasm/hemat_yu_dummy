@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:hematyu_app_dummy_fix/core/constants/colors.dart';
 
 class DetailTargetPage extends StatelessWidget {
   final Map<String, dynamic> data;
@@ -30,33 +31,85 @@ class DetailTargetPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Detail Target')),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.primaryColor, AppColors.accentColor],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        title: const Text(
+          'Detail Target',
+          style: TextStyle(
+            color: AppColors.lightTextColor,
+            fontWeight: FontWeight.w800,
+            fontSize: 22,
+          ),
+        ),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16.0),
+          child: CircleAvatar(
+            backgroundColor: AppColors.lightTextColor,
+            child: IconButton(
+              icon: const Icon(
+                Icons.arrow_back_rounded,
+                color: AppColors.primaryColor,
+              ),
+              onPressed: () => Navigator.pop(context),
+              tooltip: 'Kembali',
+            ),
+          ),
+        ),
+      ),
+      backgroundColor: AppColors.backgroundColor,
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-            _buildDetailItem('Nama Target', data['nama_target']),
-            _buildDetailItem('Deskripsi', data['deskripsi']),
+            _buildDetailItem(Icons.flag, 'Nama Target', data['nama_target']),
+            _buildDetailItem(Icons.description, 'Deskripsi', data['deskripsi']),
             _buildDetailItem(
+              Icons.monetization_on,
               'Target Dana',
               formatCurrency(data['target_dana']),
             ),
             _buildDetailItem(
+              Icons.account_balance_wallet,
               'Terkumpul',
               formatCurrency(data['terkumpul'] ?? 0),
             ),
             _buildDetailItem(
+              Icons.date_range,
               'Tanggal Target',
               formatDate(data['target_tanggal']),
             ),
             _buildDetailItem(
-              'Nama Kategori Target ',
+              Icons.category,
+              'Nama Kategori Target',
               '${data['nama_kategori']}',
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Kembali'),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Kembali',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
             ),
           ],
         ),
@@ -64,14 +117,33 @@ class DetailTargetPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailItem(String label, String? value) {
+  Widget _buildDetailItem(IconData icon, String label, String? value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-          Text(value ?? '-', style: const TextStyle(fontSize: 16)),
+          Icon(icon, color: AppColors.primaryColor), // ✅ Tambah icon di sini
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value ?? '-',
+                  style: const TextStyle(fontSize: 16, color: Colors.black87),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
