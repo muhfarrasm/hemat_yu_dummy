@@ -171,27 +171,61 @@ class _AddTransaksiPageState extends State<AddTransaksiPage> {
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               children: [
-                ToggleButtons(
-                  isSelected: [isPemasukanLocal, !isPemasukanLocal],
-                  onPressed:
-                      widget.isEdit
-                          ? null
-                          : (index) {
-                            setState(() {
-                              isPemasukanLocal = index == 0;
-                            });
-                          },
-                  children: const [
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('Pemasukan'),
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.greyColor.withOpacity(0.1),
+                          spreadRadius: 2,
+                          blurRadius: 5,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('Pengeluaran'),
+                    child: ToggleButtons(
+                      borderRadius: BorderRadius.circular(10),
+                      selectedColor: AppColors.lightTextColor,
+                      color: AppColors.greyColor,
+                      fillColor: AppColors.primaryColor,
+                      isSelected: [isPemasukanLocal, !isPemasukanLocal],
+                      onPressed:
+                          widget.isEdit
+                              ? null
+                              : (index) {
+                                setState(() {
+                                  isPemasukanLocal = index == 0;
+                                });
+                              },
+                      children: const [
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: Text(
+                            'Pemasukan',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: Text(
+                            'Pengeluaran',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
+
                 const SizedBox(height: 16),
 
                 isPemasukanLocal
