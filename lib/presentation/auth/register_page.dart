@@ -19,7 +19,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _passwordConfirmationController = TextEditingController();
-  
+
   bool _passwordVisible = false;
   bool _confirmPasswordVisible = false;
 
@@ -50,7 +50,14 @@ class _RegisterPageState extends State<RegisterPage> {
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
       appBar: AppBar(
-        title: const Text("Daftar Akun Baru"),
+        title: const Text(
+          "Daftar Akun Baru",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
         flexibleSpace: Container(
           decoration: BoxDecoration(
@@ -62,6 +69,8 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         ),
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+
       ),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
@@ -101,7 +110,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   height: 180,
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Form Card
                 Card(
                   elevation: 4,
@@ -119,8 +128,10 @@ class _RegisterPageState extends State<RegisterPage> {
                             controller: _usernameController,
                             decoration: InputDecoration(
                               labelText: 'Username',
-                              prefixIcon: Icon(Icons.person_outline, 
-                                  color: AppColors.primaryColor),
+                              prefixIcon: Icon(
+                                Icons.person_outline,
+                                color: AppColors.primaryColor,
+                              ),
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
@@ -128,10 +139,15 @@ class _RegisterPageState extends State<RegisterPage> {
                                 borderSide: BorderSide.none,
                               ),
                               contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 16, horizontal: 16),
+                                vertical: 16,
+                                horizontal: 16,
+                              ),
                             ),
-                            validator: (value) => 
-                                value!.isEmpty ? 'Username tidak boleh kosong' : null,
+                            validator:
+                                (value) =>
+                                    value!.isEmpty
+                                        ? 'Username tidak boleh kosong'
+                                        : null,
                           ),
                           const SizedBox(height: 16),
 
@@ -141,8 +157,10 @@ class _RegisterPageState extends State<RegisterPage> {
                             keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
                               labelText: 'Email',
-                              prefixIcon: Icon(Icons.email_outlined, 
-                                  color: AppColors.primaryColor),
+                              prefixIcon: Icon(
+                                Icons.email_outlined,
+                                color: AppColors.primaryColor,
+                              ),
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
@@ -151,8 +169,10 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                             ),
                             validator: (value) {
-                              if (value!.isEmpty) return 'Email tidak boleh kosong';
-                              if (!value.contains('@')) return 'Email tidak valid';
+                              if (value!.isEmpty)
+                                return 'Email tidak boleh kosong';
+                              if (!value.contains('@'))
+                                return 'Email tidak valid';
                               return null;
                             },
                           ),
@@ -164,12 +184,14 @@ class _RegisterPageState extends State<RegisterPage> {
                             obscureText: !_passwordVisible,
                             decoration: InputDecoration(
                               labelText: 'Password',
-                              prefixIcon: Icon(Icons.lock_outline, 
-                                  color: AppColors.primaryColor),
+                              prefixIcon: Icon(
+                                Icons.lock_outline,
+                                color: AppColors.primaryColor,
+                              ),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _passwordVisible 
-                                      ? Icons.visibility_off 
+                                  _passwordVisible
+                                      ? Icons.visibility_off
                                       : Icons.visibility,
                                   color: AppColors.primaryColor,
                                 ),
@@ -187,7 +209,8 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                             ),
                             validator: (value) {
-                              if (value!.isEmpty) return 'Password tidak boleh kosong';
+                              if (value!.isEmpty)
+                                return 'Password tidak boleh kosong';
                               if (value.length < 6) return 'Minimal 6 karakter';
                               return null;
                             },
@@ -200,18 +223,21 @@ class _RegisterPageState extends State<RegisterPage> {
                             obscureText: !_confirmPasswordVisible,
                             decoration: InputDecoration(
                               labelText: 'Konfirmasi Password',
-                              prefixIcon: Icon(Icons.lock_outline, 
-                                  color: AppColors.primaryColor),
+                              prefixIcon: Icon(
+                                Icons.lock_outline,
+                                color: AppColors.primaryColor,
+                              ),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _confirmPasswordVisible 
-                                      ? Icons.visibility_off 
+                                  _confirmPasswordVisible
+                                      ? Icons.visibility_off
                                       : Icons.visibility,
                                   color: AppColors.primaryColor,
                                 ),
                                 onPressed: () {
                                   setState(() {
-                                    _confirmPasswordVisible = !_confirmPasswordVisible;
+                                    _confirmPasswordVisible =
+                                        !_confirmPasswordVisible;
                                   });
                                 },
                               ),
@@ -246,21 +272,24 @@ class _RegisterPageState extends State<RegisterPage> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 elevation: 3,
-                                shadowColor: AppColors.primaryColor.withOpacity(0.3),
+                                shadowColor: AppColors.primaryColor.withOpacity(
+                                  0.3,
+                                ),
                               ),
                               onPressed: state is AuthLoading ? null : _submit,
-                              child: state is AuthLoading
-                                  ? const CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    )
-                                  : const Text(
-                                      'DAFTAR SEKARANG',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
+                              child:
+                                  state is AuthLoading
+                                      ? const CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      )
+                                      : const Text(
+                                        'DAFTAR SEKARANG',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
-                                    ),
                             ),
                           ),
                         ],

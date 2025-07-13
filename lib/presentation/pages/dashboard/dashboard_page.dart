@@ -44,7 +44,7 @@ class DashboardPage extends StatelessWidget {
       child: Scaffold(
         backgroundColor: AppColors.backgroundColor,
         appBar: AppBar(
-          title: const Text('Dashboard'),
+          title: const Text('Dashboard',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),),
           centerTitle: true,
           flexibleSpace: Container(
             decoration: BoxDecoration(
@@ -56,6 +56,8 @@ class DashboardPage extends StatelessWidget {
             ),
           ),
           elevation: 0,
+          iconTheme: const IconThemeData(color: Colors.white),
+          
           actions: [
             IconButton(
               icon: const Icon(Icons.logout),
@@ -147,6 +149,7 @@ class DashboardPage extends StatelessWidget {
                                         style: TextStyle(
                                           fontSize: 14,
                                           color: AppColors.textColor,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                       const SizedBox(height: 4),

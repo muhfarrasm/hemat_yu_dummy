@@ -56,7 +56,14 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
       appBar: AppBar(
-        title: const Text('Masuk'),
+        title: const Text(
+          'Masuk',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
         flexibleSpace: Container(
           decoration: BoxDecoration(
@@ -68,18 +75,16 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
             // Illustration
-            Image.asset(
-              'assets/images/finance.png',
-              height: 180,
-            ),
+            Image.asset('assets/images/finance.png', height: 180),
             const SizedBox(height: 24),
-            
+
             // Form Card
             Card(
               elevation: 4,
@@ -123,8 +128,10 @@ class _LoginPageState extends State<LoginPage> {
                           controller: emailController,
                           decoration: InputDecoration(
                             labelText: 'Email',
-                            prefixIcon: Icon(Icons.email_outlined, 
-                                color: AppColors.primaryColor),
+                            prefixIcon: Icon(
+                              Icons.email_outlined,
+                              color: AppColors.primaryColor,
+                            ),
                             filled: true,
                             fillColor: Colors.white,
                             border: OutlineInputBorder(
@@ -132,7 +139,9 @@ class _LoginPageState extends State<LoginPage> {
                               borderSide: BorderSide.none,
                             ),
                             contentPadding: const EdgeInsets.symmetric(
-                                vertical: 16, horizontal: 16),
+                              vertical: 16,
+                              horizontal: 16,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -143,17 +152,21 @@ class _LoginPageState extends State<LoginPage> {
                           obscureText: !_passwordVisible,
                           decoration: InputDecoration(
                             labelText: 'Password',
-                            prefixIcon: Icon(Icons.lock_outlined, 
-                                color: AppColors.primaryColor),
+                            prefixIcon: Icon(
+                              Icons.lock_outlined,
+                              color: AppColors.primaryColor,
+                            ),
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _passwordVisible 
-                                    ? Icons.visibility_off 
+                                _passwordVisible
+                                    ? Icons.visibility_off
                                     : Icons.visibility,
                                 color: AppColors.primaryColor,
                               ),
                               onPressed: () {
-                                setState(() => _passwordVisible = !_passwordVisible);
+                                setState(
+                                  () => _passwordVisible = !_passwordVisible,
+                                );
                               },
                             ),
                             filled: true,
@@ -178,21 +191,25 @@ class _LoginPageState extends State<LoginPage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               elevation: 3,
-                              shadowColor: AppColors.primaryColor.withOpacity(0.3),
+                              shadowColor: AppColors.primaryColor.withOpacity(
+                                0.3,
+                              ),
                             ),
-                            onPressed: state is AuthLoading ? null : _onLoginPressed,
-                            child: state is AuthLoading
-                                ? const CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  )
-                                : const Text(
-                                    'MASUK',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
+                            onPressed:
+                                state is AuthLoading ? null : _onLoginPressed,
+                            child:
+                                state is AuthLoading
+                                    ? const CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    )
+                                    : const Text(
+                                      'MASUK',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
-                                  ),
                           ),
                         ),
                       ],

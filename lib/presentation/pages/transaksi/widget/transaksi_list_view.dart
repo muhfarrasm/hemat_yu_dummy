@@ -164,69 +164,68 @@ class _TransaksiListViewState extends State<TransaksiListView> {
             DateTime.tryParse(item['tanggal'] ?? '') ?? DateTime.now();
         final lokasi = item['lokasi'] ?? '-';
 
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-          elevation: 3,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Info bagian kiri
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        formatter.format(jumlah),
-                        style: TextStyle(
-                          color: widget.isPemasukan ? Colors.green : Colors.red,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+        return InkWell(
+          onTap: () => _showDetail(item),
+          borderRadius: BorderRadius.circular(12),
+          child: Card(
+            margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+            elevation: 3,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Info bagian kiri
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          formatter.format(jumlah),
+                          style: TextStyle(
+                            color:
+                                widget.isPemasukan ? Colors.green : Colors.red,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Tanggal: ${DateFormat('dd MMM yyyy').format(tanggal)}',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        Text(
+                          'Lokasi: ${lokasi.length > 20 ? '${lokasi.substring(0, 20)}...' : lokasi}',
+                          style: const TextStyle(fontSize: 13),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Icon edit & delete saja
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        color: Colors.blue,
+                        onPressed: () => _handleEdit(item),
+                        tooltip: 'Edit',
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Tanggal: ${DateFormat('dd MMM yyyy').format(tanggal)}',
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      Text(
-                        'Lokasi: ${lokasi.length > 20 ? '${lokasi.substring(0, 20)}...' : lokasi}',
-                        style: const TextStyle(fontSize: 13),
-                        overflow: TextOverflow.ellipsis,
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        color: Colors.red,
+                        onPressed: () => _handleDelete(item['id']),
+                        tooltip: 'Hapus',
                       ),
                     ],
                   ),
-                ),
-
-                // Icon edit & delete horizontal
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.info_outline),
-                      color: Colors.teal,
-                      onPressed: () => _showDetail(item),
-                      tooltip: 'Detail',
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.edit),
-                      color: Colors.blue,
-                      onPressed: () => _handleEdit(item),
-                      tooltip: 'Edit',
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.delete),
-                      color: Colors.red,
-                      onPressed: () => _handleDelete(item['id']),
-                      tooltip: 'Hapus',
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );

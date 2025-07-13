@@ -38,27 +38,49 @@ class KategoriRepository {
   }
 }
   // Untuk ambil data yang ada dalam kategori tersebut pemasukan/pengeluaran/targets
+// Future<KategoriResponse> getDetailKategori({
+//   required JenisKategori type,
+//   required int id,
+// }) async {
+//   final response = await _client.get('${_endpoint(type)}/$id', authorized: true);
+//   if (response.statusCode == 200) {
+//     final data = jsonDecode(response.body);
+
+    
+//     final kategoriJson = switch (type) {
+//       JenisKategori.pengeluaran => data['data']['kategori'],
+//       JenisKategori.target => data['data']['kategori'],
+//       JenisKategori.pemasukan => data['data'], 
+//     };
+
+//     return KategoriResponse.fromJson(kategoriJson);
+//   } else {
+//     throw Exception('Gagal mengambil detail kategori');
+//   }
+// }
+
 Future<KategoriResponse> getDetailKategori({
   required JenisKategori type,
   required int id,
 }) async {
-  final response = await _client.get('${_endpoint(type)}/$id', authorized: true);
+  final response =
+      await _client.get('${_endpoint(type)}/$id', authorized: true);
+
   if (response.statusCode == 200) {
     final data = jsonDecode(response.body);
 
-    
-    final kategoriJson = switch (type) {
-      JenisKategori.pengeluaran => data['data']['kategori'],
-      JenisKategori.target => data['data']['kategori'],
-      JenisKategori.pemasukan => data['data'], 
-    };
-
-    return KategoriResponse.fromJson(kategoriJson);
+    if (type == JenisKategori.pengeluaran || type == JenisKategori.target) {
+      final kategoriJson = data['data']['kategori'];
+      final statistikJson = data['data']['statistik'];
+      return KategoriResponse.fromJson(kategoriJson, statistikJson: statistikJson);
+    } else {
+      final kategoriJson = data['data'];
+      return KategoriResponse.fromJson(kategoriJson);
+    }
   } else {
     throw Exception('Gagal mengambil detail kategori');
   }
 }
-
 
 
 Future<void> createKategori({
@@ -110,6 +132,8 @@ Future<void> deleteKategori({
 
   throw Exception('Gagal menghapus kategori');
 }
+
+
 
 
 String _endpoint(JenisKategori type) {
