@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hematyu_app_dummy_fix/core/constants/colors.dart';
 import 'package:hematyu_app_dummy_fix/data/repository/kategori_repository.dart';
 import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_bloc.dart';
 import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_event.dart';
-import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_state.dart';
 import 'package:hematyu_app_dummy_fix/presentation/kategori/bloc/kategori_type.dart';
 import 'package:hematyu_app_dummy_fix/service/service_http_client.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 
 class FormTargetPage extends StatefulWidget {
-  final bool isEdit; //PARAMETER edit atau tambah
-  // Jika isEdit true, maka akan mengisi form dengan data yang ada di initialData
+  final bool isEdit;
   final Map<String, dynamic>? initialData;
 
   const FormTargetPage({super.key, this.isEdit = false, this.initialData});
@@ -51,8 +50,8 @@ class _FormTargetPageState extends State<FormTargetPage> {
     _danaController = TextEditingController(
       text: widget.initialData?['target_dana']?.toString() ?? '',
     );
-
     _alokasiController = TextEditingController();
+
     final tanggal = widget.initialData?['target_tanggal'];
     if (tanggal != null) {
       _selectedDate = DateTime.tryParse(tanggal);
@@ -67,66 +66,54 @@ class _FormTargetPageState extends State<FormTargetPage> {
   }
 
   Future<void> _fetchKategori() async {
-    try {
-      final repo = KategoriRepository(ServiceHttpClient());
-      final result = await repo.getKategoriTarget();
-      setState(() {
-        _kategoriList =
-            result
-                .map(
-                  (item) => {'id': item.id, 'nama_kategori': item.namaKategori},
-                )
-                .toList();
-      });
-    } catch (e) {
-      _showError('Gagal mengambil data kategori');
-    }
+    final repo = KategoriRepository(ServiceHttpClient());
+    final result = await repo.getKategoriTarget();
+    setState(() {
+      _kategoriList =
+          result
+              .map(
+                (item) => {'id': item.id, 'nama_kategori': item.namaKategori},
+              )
+              .toList();
+    });
   }
 
   Future<void> _fetchPemasukan() async {
-    try {
-      final client = ServiceHttpClient();
-      final response = await client.get('/pemasukan', authorized: true);
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body);
-        final List list = json['data'];
-        setState(() {
-          _pemasukanList =
-              list.map((e) {
-                return {
-                  'id': e['id'],
-                  'deskripsi': e['deskripsi'] ?? '-',
-                  'jumlah': e['jumlah'],
-                };
-              }).toList();
-        });
-      }
-    } catch (e) {
-      _showError('Gagal mengambil data pemasukan');
+    final client = ServiceHttpClient();
+    final response = await client.get('/pemasukan', authorized: true);
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      final List list = json['data'];
+      setState(() {
+        _pemasukanList =
+            list.map((e) {
+              return {
+                'id': e['id'],
+                'deskripsi': e['deskripsi'] ?? '-',
+                'jumlah': e['jumlah'],
+              };
+            }).toList();
+      });
     }
   }
 
   Future<void> _fetchKategoriPengeluaran() async {
-    try {
-      final client = ServiceHttpClient();
-      final response = await client.get(
-        '/kategori-pengeluaran',
-        authorized: true,
-      );
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body);
-        final List list = json['data'];
-        setState(() {
-          _kategoriPengeluaranList =
-              list
-                  .map(
-                    (e) => {'id': e['id'], 'nama_kategori': e['nama_kategori']},
-                  )
-                  .toList();
-        });
-      }
-    } catch (e) {
-      _showError('Gagal mengambil kategori pengeluaran');
+    final client = ServiceHttpClient();
+    final response = await client.get(
+      '/kategori-pengeluaran',
+      authorized: true,
+    );
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      final List list = json['data'];
+      setState(() {
+        _kategoriPengeluaranList =
+            list
+                .map(
+                  (e) => {'id': e['id'], 'nama_kategori': e['nama_kategori']},
+                )
+                .toList();
+      });
     }
   }
 
@@ -150,79 +137,26 @@ class _FormTargetPageState extends State<FormTargetPage> {
       'kategori_target_id': _selectedKategoriId,
     };
 
-    try {
-      // Kirim API request
-      final client = ServiceHttpClient(); // Pastikan ada file ini
-      final response =
-          widget.isEdit
-              ? await client.put(
-                '/target/${widget.initialData!['id']}',
-                body,
-                authorized: true,
-              )
-              : await client.post('/target', body, authorized: true);
+    final client = ServiceHttpClient();
+    final response =
+        widget.isEdit
+            ? await client.put(
+              '/target/${widget.initialData!['id']}',
+              body,
+              authorized: true,
+            )
+            : await client.post('/target', body, authorized: true);
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        if (!widget.isEdit) {
-          final targetId = jsonDecode(response.body)['data']['id'];
-          final jumlahAlokasi = double.tryParse(_alokasiController.text.trim());
-
-          final alokasiBody = {
-            'id_target': targetId,
-            'id_pemasukan': _selectedPemasukanId,
-            'jumlah_alokasi': jumlahAlokasi,
-          };
-
-          final alokasiResponse = await client.post(
-            '/relasi-target-pemasukan',
-            alokasiBody,
-            authorized: true,
-          );
-
-          if (!(alokasiResponse.statusCode == 200 ||
-              alokasiResponse.statusCode == 201)) {
-            _showError('Target tersimpan tapi gagal alokasi');
-            return;
-          }
-
-          final pengeluaranBody = {
-            'jumlah': jumlahAlokasi,
-            'deskripsi': 'Alokasi dana untuk target ID: $targetId',
-            'tanggal': DateFormat('yyyy-MM-dd').format(DateTime.now()),
-            'kategori_id':
-                _selectedKategoriPengeluaranId, // pakai kategori target juga
-          };
-
-          final pengeluaranResponse = await client.post(
-            '/pengeluaran',
-            pengeluaranBody,
-            authorized: true,
-          );
-          print('STATUS PENGELUARAN: ${pengeluaranResponse.statusCode}');
-          print('BODY PENGELUARAN: ${pengeluaranResponse.body}');
-
-          if (!(pengeluaranResponse.statusCode == 200 ||
-              pengeluaranResponse.statusCode == 201)) {
-            _showError(
-              'Target dan alokasi tersimpan, tapi gagal mencatat pengeluaran.',
-            );
-            return;
-          }
-        }
-
-        Navigator.pop(context, true);
-      } else {
-        _showError('Gagal menyimpan target');
-      }
-    } catch (e) {
-      _showError(e.toString());
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      Navigator.pop(context, true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal menyimpan target'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
   }
 
   Future<void> _pickDate() async {
@@ -232,7 +166,6 @@ class _FormTargetPageState extends State<FormTargetPage> {
       firstDate: DateTime.now(),
       lastDate: DateTime(2100),
     );
-
     if (result != null) {
       setState(() {
         _selectedDate = result;
@@ -243,8 +176,43 @@ class _FormTargetPageState extends State<FormTargetPage> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.isEdit;
+
     return Scaffold(
-      appBar: AppBar(title: Text(isEdit ? 'Edit Target' : 'Tambah Target')),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.primaryColor, AppColors.accentColor],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16.0),
+          child: CircleAvatar(
+            backgroundColor: AppColors.lightTextColor,
+            child: IconButton(
+              icon: const Icon(
+                Icons.arrow_back_rounded,
+                color: AppColors.primaryColor,
+              ),
+              onPressed: () => Navigator.pop(context),
+              tooltip: 'Kembali',
+            ),
+          ),
+        ),
+        title: Text(
+          widget.isEdit ? 'Edit Kategori' : 'Tambah Kategori',
+          style: const TextStyle(
+            color: AppColors.lightTextColor,
+            fontWeight: FontWeight.w800,
+            fontSize: 22,
+          ),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -253,52 +221,62 @@ class _FormTargetPageState extends State<FormTargetPage> {
             children: [
               TextFormField(
                 controller: _namaController,
-                decoration: const InputDecoration(labelText: 'Nama Target'),
+                decoration: const InputDecoration(
+                  labelText: 'Nama Target',
+                  prefixIcon: Icon(Icons.flag),
+                ),
                 validator:
                     (value) =>
                         value == null || value.isEmpty ? 'Wajib diisi' : null,
               ),
-             
-
+              const SizedBox(height: 16),
               DropdownButtonFormField<int>(
-                value:
-                    _kategoriList.any(
-                          (item) => item['id'] == _selectedKategoriId,
-                        )
-                        ? _selectedKategoriId
-                        : null,
+                value: _selectedKategoriId,
                 items:
-                    _kategoriList.map((item) {
-                      return DropdownMenuItem<int>(
-                        value: item['id'],
-                        child: Text(item['nama_kategori']),
-                      );
-                    }).toList(),
+                    _kategoriList
+                        .map(
+                          (item) => DropdownMenuItem<int>(
+                            value: item['id'],
+                            child: Text(item['nama_kategori']),
+                          ),
+                        )
+                        .toList(),
                 onChanged: (val) {
                   setState(() {
                     _selectedKategoriId = val;
                   });
                 },
-                decoration: const InputDecoration(labelText: 'Kategori Target'),
+                decoration: const InputDecoration(
+                  labelText: 'Kategori Target',
+                  prefixIcon: Icon(Icons.category),
+                ),
                 validator:
                     (val) =>
                         val == null ? 'Pilih kategori terlebih dahulu' : null,
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _deskripsiController,
-                decoration: const InputDecoration(labelText: 'Deskripsi'),
+                decoration: const InputDecoration(
+                  labelText: 'Deskripsi',
+                  prefixIcon: Icon(Icons.description),
+                ),
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _danaController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Target Dana'),
+                decoration: const InputDecoration(
+                  labelText: 'Target Dana',
+                  prefixIcon: Icon(Icons.attach_money),
+                ),
                 validator: (value) {
                   final num = double.tryParse(value ?? '');
                   if (num == null || num <= 0) return 'Harus lebih dari 0';
                   return null;
                 },
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
@@ -308,24 +286,33 @@ class _FormTargetPageState extends State<FormTargetPage> {
                           : DateFormat('dd MMM yyyy').format(_selectedDate!),
                     ),
                   ),
-                  ElevatedButton(
+                  ElevatedButton.icon(
                     onPressed: _pickDate,
-                    child: const Text('Pilih Tanggal'),
+                    icon: const Icon(Icons.calendar_today, color: Colors.white),
+                    label: const Text('Pilih Tanggal'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryColor,
+                      foregroundColor: AppColors.lightTextColor,
+                    ),
                   ),
                 ],
               ),
+
               if (!isEdit) ...[
+                const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
                   value: _selectedPemasukanId,
                   items:
-                      _pemasukanList.map((item) {
-                        return DropdownMenuItem<int>(
-                          value: item['id'],
-                          child: Text(
-                            '${item['deskripsi']} (Rp ${item['jumlah']})',
-                          ),
-                        );
-                      }).toList(),
+                      _pemasukanList
+                          .map(
+                            (item) => DropdownMenuItem<int>(
+                              value: item['id'],
+                              child: Text(
+                                '${item['deskripsi']} (Rp ${item['jumlah']})',
+                              ),
+                            ),
+                          )
+                          .toList(),
                   onChanged: (val) {
                     setState(() {
                       _selectedPemasukanId = val;
@@ -333,6 +320,7 @@ class _FormTargetPageState extends State<FormTargetPage> {
                   },
                   decoration: const InputDecoration(
                     labelText: 'Pilih Pemasukan',
+                    prefixIcon: Icon(Icons.account_balance_wallet),
                   ),
                   validator:
                       (val) =>
@@ -340,11 +328,13 @@ class _FormTargetPageState extends State<FormTargetPage> {
                               ? 'Pilih pemasukan terlebih dahulu'
                               : null,
                 ),
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: _alokasiController,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
                     labelText: 'Jumlah Alokasi',
+                    prefixIcon: Icon(Icons.money_off_csred_rounded),
                   ),
                   validator: (val) {
                     final amount = double.tryParse(val ?? '');
@@ -354,36 +344,47 @@ class _FormTargetPageState extends State<FormTargetPage> {
                     return null;
                   },
                 ),
+                const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
                   value: _selectedKategoriPengeluaranId,
                   items:
-                      _kategoriPengeluaranList.map((item) {
-                        return DropdownMenuItem<int>(
-                          value: item['id'],
-                          child: Text(item['nama_kategori']),
-                        );
-                      }).toList(),
-                  onChanged:
-                      (val) =>
-                          setState(() => _selectedKategoriPengeluaranId = val),
+                      _kategoriPengeluaranList
+                          .map(
+                            (item) => DropdownMenuItem<int>(
+                              value: item['id'],
+                              child: Text(item['nama_kategori']),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (val) {
+                    setState(() {
+                      _selectedKategoriPengeluaranId = val;
+                    });
+                  },
                   decoration: const InputDecoration(
                     labelText: 'Kategori Pengeluaran',
+                    prefixIcon: Icon(Icons.money),
                   ),
                   validator:
                       (val) =>
                           val == null ? 'Pilih kategori pengeluaran' : null,
                 ),
               ],
-              const SizedBox(height: 20),
-              ElevatedButton(
+
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
                 onPressed: _submit,
-                child: Text(isEdit ? 'Update' : 'Simpan'),
+                icon: const Icon(Icons.save, color: Colors.white),
+                label: Text(isEdit ? 'Update Target' : 'Simpan Target'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryColor,
+                  foregroundColor: AppColors.lightTextColor,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
               ),
             ],
           ),
         ),
-
-        // Jika mode tambah, tampilkan alokasi pemasukan
       ),
     );
   }
